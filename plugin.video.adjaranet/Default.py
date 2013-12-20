@@ -6,7 +6,6 @@ nav = AdjaranetNavigation.AdjaranetNavigation()
                         
 def CATEGORIES():
         nav.addDir('Sherlock', 'http://adjaranet.com/Movie/main?id=1000080&serie=1', 'TVSeries', '')
-def CATEGORIES():
         nav.addDir('Elementary', 'http://adjaranet.com/Movie/main?id=1000059&serie=1', 'TVSeries', '')
 
         
