@@ -1,3 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
+<addon id="plugin.video.adjaranet"
+       name="Adjaranet.GE"
+       version="0.0.1"
+       provider-name="lambda.ge">
+    <requires>
+        <import addon="xbmc.python" version="1.0"/>
+    </requires>
+    <extension point="xbmc.python.pluginsource"
+               library="default.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <platform>all</platform>
+        <summary>adjaranet.ge Scraper plugin</summary>
+        <description>Watch TV Series from your XBMC Media Center</description>
+    </extension>
+</addon>
 </addons>
