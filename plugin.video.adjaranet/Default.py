@@ -73,6 +73,7 @@ elif action=='TVSeries':
 elif action=='GetEpisodes':
         print ""+url
         TVStreamer.TVStreamer().GetEpisodes(url, get_params(url))
+        xbmc.executebuiltin("Container.SetViewMode(51)")
 
 elif action=='gettvlinks':
         print ""+url
