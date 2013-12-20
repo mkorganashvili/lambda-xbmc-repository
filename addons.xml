@@ -2,7 +2,7 @@
 <addons>
 <addon id="plugin.video.adjaranet"
        name="Adjaranet.GE"
-       version="0.0.1"
+       version="0.0.2"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
