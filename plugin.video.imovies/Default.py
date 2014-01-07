@@ -7,6 +7,7 @@ nav = Navigation.Navigation()
 def CATEGORIES():
         nav.addDir('Sherlock', 'http://www.imovies.ge/movies/35884', 'TVSeries', '')
         nav.addDir('Elementary', 'http://www.imovies.ge/movies/37815', 'TVSeries', '')
+        nav.addDir('MASTERS OF SEX', 'http://www.imovies.ge/movies/40266', 'TVSeries', '')
 
         
 def get_params(paramstring = sys.argv[2]):
