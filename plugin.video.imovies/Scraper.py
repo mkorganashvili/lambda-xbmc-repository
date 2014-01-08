@@ -1,8 +1,13 @@
 ﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,string
 from datetime import datetime, date, timedelta
 from xml.dom import minidom
+from Lib.net import Net
+import CommonFunctions
 
+common = CommonFunctions
+common.plugin = "plugin.video.imovies"
 nav = Navigation.Navigation()
+net = Net()
     
 class Scraper:
     
@@ -33,6 +38,33 @@ class Scraper:
 			thumbnail = item.getElementsByTagName('jwplayer:image')[0].firstChild.nodeValue
 			nav.addLink(name, url, '', thumbnail = thumbnail)
                 
+	def GetUser(self, url):
+		content = net.http_GET(url).content
+		userBox = common.parseDOM(content, "div", attrs = { "class": "userbox" })[0]
+		name = common.parseDOM(userBox, "div", attrs = { "class": "firstname" })[0] + ' ' + common.parseDOM(userBox, "div", attrs = { "class": "lastname" })[0]
+		avatar = common.parseDOM(userBox, "img", ret="src")[0]
+		nav.addDir(name, url, 'WatchList', avatar, thumbnail = avatar)
+	
+	def GetWatchlist(self, url):
+		content = net.http_GET(url + '/watchlist').content
+		items = common.parseDOM(content, "div", attrs = { "class": "item[^\"']*" })
+		
+		for item in items:
+			title_ge = re.sub('<[^<]+?>', '', common.parseDOM(item, "h2", attrs = { "class": "film_title[^\"']*" })[0])
+			title_en = re.sub('<[^<]+?>', '', common.parseDOM(item, "h2", attrs = { "class": "film_title[^\"']*" })[1])
+			imageDiv = common.parseDOM(item, "div", attrs = { "class": "cropped_image" })[0]
+			movieUrl = common.parseDOM(item, "a", ret="href")[0]
+			thumbnail = common.parseDOM(item, "img", ret="src")[0]
+			
+			movieId = common.parseDOM(item, "a", attrs = { "class": "wishlist[^\"']*" }, ret="film_id")[0]
+			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
+			movieItems = common.parseDOM(movieInfo, "item")
+			if movieItems:
+				fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
+				nav.addLink(title_en, fileUrl, 'movie', thumbnail)
+			else:
+				nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVSeries', '', thumbnail = thumbnail)
+	
 	def GETTVLINKS(self, url, name):
 		req = urllib2.Request(url)
 		req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')

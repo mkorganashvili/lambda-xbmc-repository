@@ -5,9 +5,8 @@ nav = Navigation.Navigation()
 
                         
 def CATEGORIES():
-        nav.addDir('Sherlock', 'http://www.imovies.ge/movies/35884', 'TVSeries', '')
-        nav.addDir('Elementary', 'http://www.imovies.ge/movies/37815', 'TVSeries', '')
-        nav.addDir('MASTERS OF SEX', 'http://www.imovies.ge/movies/40266', 'TVSeries', '')
+        nav.addDir('Users', '1', 'Users', '')
+        nav.addDir('TV Series', '1', 'TVSeriesRoot', '')
 
         
 def get_params(paramstring = sys.argv[2]):
@@ -65,10 +64,24 @@ if action==None or url==None or len(url)<1:
         print ""
         CATEGORIES()
        
+elif action=='TVSeriesRoot':
+        nav.addDir('Sherlock', 'http://www.imovies.ge/movies/35884', 'TVSeries', '')
+        nav.addDir('Elementary', 'http://www.imovies.ge/movies/37815', 'TVSeries', '')
+        nav.addDir('MASTERS OF SEX', 'http://www.imovies.ge/movies/40266', 'TVSeries', '')
+
+elif action=='Users':
+        Scraper.Scraper().GetUser('http://www.imovies.ge/users/2091')
+        Scraper.Scraper().GetUser('http://www.imovies.ge/users/44657')
+        xbmc.executebuiltin("Container.SetViewMode(51)")
+
 elif action=='TVSeries':
         print ""+url
 	Scraper.Scraper().GetSeasons(url)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
+
+elif action=='WatchList':
+        Scraper.Scraper().GetWatchlist(url)
+        xbmc.executebuiltin("Container.SetViewMode(50)")
 
 elif action=='GetEpisodes':
         print ""+url

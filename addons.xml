@@ -20,10 +20,11 @@
 
 <addon id="plugin.video.imovies"
        name="imovies.ge"
-       version="0.0.5"
+       version="0.0.6"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
+		<import addon="script.module.parsedom" version="0.9.1"/>
     </requires>
     <extension point="xbmc.python.pluginsource"
                library="default.py">
