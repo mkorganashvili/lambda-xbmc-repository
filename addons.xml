@@ -39,7 +39,7 @@
 
 <addon id="plugin.video.iptv"
        name="IPTV.ge"
-       version="0.0.1"
+       version="0.0.2"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
@@ -52,6 +52,25 @@
     <extension point="xbmc.addon.metadata">
         <platform>all</platform>
         <summary>IPTV.GE Streamings</summary>
+        <description>Georgian Live TV Streamings</description>
+    </extension>
+</addon>
+
+<addon id="plugin.video.myvideo"
+       name="MyVideo.ge"
+       version="0.0.2"
+       provider-name="lambda.ge">
+    <requires>
+        <import addon="xbmc.python" version="1.0"/>
+		<import addon="script.module.parsedom" version="0.9.1"/>
+    </requires>
+    <extension point="xbmc.python.pluginsource"
+               library="default.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <platform>all</platform>
+        <summary>MyVideo.GE Streamings</summary>
         <description>Georgian Live TV Streamings</description>
     </extension>
 </addon>

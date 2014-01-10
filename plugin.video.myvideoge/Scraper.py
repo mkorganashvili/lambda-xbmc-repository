@@ -1,4 +1,4 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,string
+﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,string,ast
 from datetime import datetime, date, timedelta
 from xml.dom import minidom
 from Lib.net import Net
@@ -14,52 +14,40 @@ common.dbg = True
 nav = Navigation()
 net = Net()
 
-BASE_URL = 'http://iptv.ge'
-RTMP_URL = ' swfUrl=http://www.iptv.ge/plugins/content/jw_allvideos/players/mediaplayer.swf'
+BASE_URL = 'http://www.myvideo.ge'
+RTMP_URL = ' app=dvrh264/{0} playpath=mp4:{0} swfUrl=http://www.myvideo.ge/dvr/dvrAvatar7.swf?v=1.91 pageURL=http://www.myvideo.ge live=true'
     
 class Scraper:
     
-	def _GetChannels(self, url):
-		content = net.http_GET(url).content
-		items = common.parseDOM(content, "a", attrs = { "class": "thumbnail" }, ret=True)
-		for item in items:
-			href = common.parseDOM(item, "a", attrs = { "class": "thumbnail" }, ret='href')[0]
-			name = common.parseDOM(item, "img", ret='alt')[0]
-			thumbnail = common.parseDOM(item, "img", ret='src')[0]
-			
-			channelContent = net.http_GET(BASE_URL + href).content
-			scripts = common.parseDOM(channelContent, "script", attrs = { "type": "text/javascript" })
-			
-			for script in scripts:
-				tmp_lst = re.compile('jwplayer\("IPTVLiveStream"\).setup.*?', re.M | re.S).findall(script)
-				if len(tmp_lst) > 0:
-					fileName = re.compile('file: "(.*?)"').findall(script)[0]
-					nav.addLink(name, fileName + RTMP_URL, '', thumbnail = thumbnail)
-					break
-	
 	def GetChannels(self, url):
-		content = net.http_GET(url).content
-		items = common.parseDOM(content, "div", attrs = { "style": "width: 256px; margin: 2px 0px;position:relative;float:left" })
+		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
+		items = common.parseDOM(content, "div", attrs = { "class": "livetv_grid_item_holder[^\"']*" })
 		for item in items:
-			href = common.parseDOM(item, "a", attrs = { "class": "thumbnail" }, ret='href')[0]
-			name = common.parseDOM(item, "img", ret='alt')[0]
-			icon = common.parseDOM(item, "img", ret='src')[1]
-			thumbnail = common.parseDOM(item, "img", ret='src')[0]
-
-			nav.addDir(name, BASE_URL + href, 'PlayTV', icon, thumbnail = thumbnail, isFolder = False)
+			icon = common.parseDOM(item, "div", attrs = { "class": "tv_logo" }, ret='style')[0]
+			href = common.parseDOM(item, "a", ret='href')[0]
+			name = common.parseDOM(item, "div", attrs = { "class": "tv_title" })[0]
+			channel = common.parseDOM(item, "div", attrs = { "class": "tv_logo" }, ret='alt')[0]
 			
-
-	def PlayTV(self, url):
-		content = net.http_GET(url).content
-		data = re.compile('jwplayer\("IPTVLiveStream"\).setup\((.*?)\)', re.DOTALL).findall(content)[0]
-		file = re.compile('file: "(.*?)"').findall(content)[0]
-		title = re.compile('<title>(.*?)<\/title>').findall(content)[0]
-		
-		listitem = xbmcgui.ListItem(title)
-		listitem.setInfo('video', {'Title': title})
-		xbmc.Player().play(file + RTMP_URL, listitem)
+			icon = BASE_URL + re.compile("background-image:url\('(.*?)'\)").findall(icon)[0]
+			name = common.stripTags(name).encode('utf-8')
+			
+			nav.addDir(name, BASE_URL + '/' + href, 'PlayTV', icon, thumbnail = icon, isFolder = False)
 	
+	
+	def PlayTV(self, url):
+			content = net.http_GET(url).content
+			flashvars = re.compile("var flashvars = \{(.*?)\}", re.DOTALL).findall(content)[0]			
+			chan = re.compile("'chan':'(.*?)'").findall(flashvars)[0]
+			dvrServer = re.compile("'dvrServer':'(.*?)'").findall(flashvars)[0]
+			name = common.parseDOM(content, "div", attrs = { "class": "mv_user_channel_name[^\"']*" })[0]
+			name = common.stripTags(name)
 			
+			listitem = xbmcgui.ListItem(name)
+			listitem.setInfo('video', {'Title': name})
+			xbmc.Player().play(dvrServer + RTMP_URL.format(chan), listitem)
+
+		
+	
 	def GetWatchlist(self, url):
 		content = net.http_GET(url + '/watchlist').content
 		items = common.parseDOM(content, "div", attrs = { "class": "item[^\"']*" })

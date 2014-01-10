@@ -4,7 +4,6 @@ from Lib.Navigation import Navigation
 
 nav = Navigation()
 
-        
 def get_params(paramstring = sys.argv[2]):
         param = []
         if len(paramstring) >= 2:
@@ -56,9 +55,10 @@ print "Mode: " + str(action)
 print "URL: " + str(url)
 print "Name: " + str(name)
 
+
 if action==None or url==None or len(url)<1:
-        nav.addDir('Channels', 'http://www.iptv.ge/en/tv/', 'Channels', '')
-        xbmc.executebuiltin("Container.SetViewMode(51)")
+        nav.addDir('Channels', 'http://www.myvideo.ge/c/livetv', 'Channels', '')
+        xbmc.executebuiltin("Container.SetViewMode(50)")
        
 elif action=='Channels':
 		Scraper.Scraper().GetChannels(url)
