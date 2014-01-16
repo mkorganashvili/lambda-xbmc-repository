@@ -3,6 +3,7 @@ from datetime import datetime, date, timedelta
 from xml.dom import minidom
 from Lib.net import Net
 import CommonFunctions
+from urlparse import urlparse
 
 common = CommonFunctions
 common.plugin = "plugin.video.imovies"
@@ -23,6 +24,9 @@ class Scraper:
                 match = re.compile('<li><a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a></li>').findall(link)
                 for name, season in match:
                         nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '')
+				
+                if len(match) == 0:
+                        nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '')
 	
 	def GetEpisodes(self, url, params):
 		req = urllib2.Request(url)
@@ -34,9 +38,11 @@ class Scraper:
 			
 		for item in itemlist:
 			name = re.sub('<[^<]+?>', '', item.getElementsByTagName('description')[0].firstChild.nodeValue)
-			url = item.getElementsByTagName('jwplayer:source')[0].attributes['file'].value + '/ENG'	
+			url = item.getElementsByTagName('jwplayer:source')[0].attributes['file'].value + 'ENG'
+			path = urlparse(url).path
+			ip = re.compile('ENG\:(.*?)\:').findall(item.getElementsByTagName('jwplayer:source')[0].attributes['lang'].value)[0]
 			thumbnail = item.getElementsByTagName('jwplayer:image')[0].firstChild.nodeValue
-			nav.addLink(name, url, '', thumbnail = thumbnail)
+			nav.addLink(name, 'http://' + ip + path, '', thumbnail = thumbnail)
                 
 	def GetUser(self, url):
 		content = net.http_GET(url).content
