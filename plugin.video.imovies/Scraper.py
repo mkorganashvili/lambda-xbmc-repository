@@ -38,11 +38,15 @@ class Scraper:
 			
 		for item in itemlist:
 			name = re.sub('<[^<]+?>', '', item.getElementsByTagName('description')[0].firstChild.nodeValue)
-			url = item.getElementsByTagName('jwplayer:source')[0].attributes['file'].value + 'ENG'
+			url = item.getElementsByTagName('jwplayer:source')[0].attributes['file'].value
 			path = urlparse(url).path
-			ip = re.compile('ENG\:(.*?)\:').findall(item.getElementsByTagName('jwplayer:source')[0].attributes['lang'].value)[0]
+			langData = sorted(item.getElementsByTagName('jwplayer:source')[0].attributes['lang'].value.split(','))
+			
+			langMatcher = re.compile('(.*?)\:(.*?)\:').findall(langData[0])[0]
+			lang = langMatcher[0]
+			ip = langMatcher[1]
 			thumbnail = item.getElementsByTagName('jwplayer:image')[0].firstChild.nodeValue
-			nav.addLink(name, 'http://' + ip + path, '', thumbnail = thumbnail)
+			nav.addLink(name, 'http://' + ip + path + lang, '', thumbnail = thumbnail)
                 
 	def GetUser(self, url):
 		content = net.http_GET(url).content
