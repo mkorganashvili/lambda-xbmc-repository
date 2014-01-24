@@ -20,7 +20,7 @@
 
 <addon id="plugin.video.imovies"
        name="imovies.ge"
-       version="0.0.9"
+       version="0.0.10"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>

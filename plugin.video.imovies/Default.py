@@ -80,7 +80,7 @@ elif action=='TVSeries':
 
 elif action=='WatchList':
         Scraper.Scraper().GetWatchlist(url)
-        xbmc.executebuiltin("Container.SetViewMode(501)")
+        xbmc.executebuiltin("Container.SetViewMode(500)")
 
 elif action=='GetEpisodes':
         print ""+url
