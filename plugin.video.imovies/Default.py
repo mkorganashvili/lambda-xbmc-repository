@@ -65,9 +65,8 @@ if action==None or url==None or len(url)<1:
         CATEGORIES()
        
 elif action=='TVSeriesRoot':
-        nav.addDir('Sherlock', 'http://www.imovies.ge/movies/35884', 'TVSeries', '')
         nav.addDir('Elementary', 'http://www.imovies.ge/movies/37815', 'TVSeries', '')
-        nav.addDir('MASTERS OF SEX', 'http://www.imovies.ge/movies/40266', 'TVSeries', '')
+        nav.addDir('Klondike', 'http://www.imovies.ge/movies/42824', 'TVSeries', '')
 
 elif action=='Users':
         Scraper.Scraper().GetUser('http://www.imovies.ge/users/2091')
@@ -81,7 +80,7 @@ elif action=='TVSeries':
 
 elif action=='WatchList':
         Scraper.Scraper().GetWatchlist(url)
-        xbmc.executebuiltin("Container.SetViewMode(50)")
+        xbmc.executebuiltin("Container.SetViewMode(501)")
 
 elif action=='GetEpisodes':
         print ""+url
