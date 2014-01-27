@@ -84,7 +84,7 @@ elif action=='WatchList':
 
 elif action=='GetEpisodes':
         print ""+url
-        Scraper.Scraper().GetEpisodes(url, get_params(url))
+        Scraper.Scraper().GetEpisodes(url, itemparams)
         xbmc.executebuiltin("Container.SetViewMode(50)")
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

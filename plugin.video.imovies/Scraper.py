@@ -1,4 +1,4 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,string
+﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,string,sys
 from datetime import datetime, date, timedelta
 from xml.dom import minidom
 from Lib.net import Net
@@ -7,6 +7,8 @@ from urlparse import urlparse
 
 common = CommonFunctions
 common.plugin = "plugin.video.imovies"
+#common.dbg = True
+common.dbglevel = 2
 nav = Navigation.Navigation()
 net = Net()
     
@@ -19,14 +21,24 @@ class Scraper:
                 req = urllib2.Request(url)
                 req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
                 response = urllib2.urlopen(req)
-                link = response.read()
+                content = response.read()
                 response.close()
-                match = re.compile('<li><a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a></li>').findall(link)
+                match = re.compile('<li><a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a></li>').findall(content)
+                title = common.parseDOM(content, "h2", attrs = { "class": "[^\"']*film_title_eng[^\"']*" })[0]
+                
                 for name, season in match:
-                        nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '')
+                        params = {
+                                "title": title,
+                                "season": season
+                        }
+                        nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '', params)
 				
                 if len(match) == 0:
-                        nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '')
+                        params = {
+                                "title": title,
+                                "season": 1
+                        }
+                        nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
 	
 	def GetEpisodes(self, url, params):
 		req = urllib2.Request(url)
@@ -37,16 +49,41 @@ class Scraper:
 		itemlist = xmldoc.getElementsByTagName('item') 
 			
 		for item in itemlist:
-			name = re.sub('<[^<]+?>', '', item.getElementsByTagName('description')[0].firstChild.nodeValue)
+			name = common.stripTags(item.getElementsByTagName('description')[0].firstChild.nodeValue)
 			url = item.getElementsByTagName('jwplayer:source')[0].attributes['file'].value
 			path = urlparse(url).path
 			langData = sorted(item.getElementsByTagName('jwplayer:source')[0].attributes['lang'].value.split(','))
-			
-			langMatcher = re.compile('(.*?)\:(.*?)\:').findall(langData[0])[0]
-			lang = langMatcher[0]
-			ip = langMatcher[1]
+			episode = re.compile('([0-9]+)').findall(item.getElementsByTagName('title')[0].firstChild.nodeValue)[0]
 			thumbnail = item.getElementsByTagName('jwplayer:image')[0].firstChild.nodeValue
-			nav.addLink(name, 'http://' + ip + path + lang, '', thumbnail = thumbnail)
+			
+			li = xbmcgui.ListItem(name, iconImage = thumbnail, thumbnailImage = thumbnail)
+			li.setInfo( type= "Video", 
+                                infoLabels =
+                                        {
+                                             "title": name,
+                                             "episode": episode,
+                                             "season": params["season"],
+                                             "tvshowtitle": params["title"]
+                                        } )
+
+                        contextMenuItems = []
+			for lang in langData[1:]:
+				common.log(lang)
+                                urlData = self.GetEpisodeUrl(lang, path)
+                                contextMenuItems.append((urlData['lang'], 'PlayMedia("' + urlData['url'] + '")'))
+                        li.addContextMenuItems(contextMenuItems)
+
+                        xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[0], path)['url'], listitem = li)
+
+			#nav.addLink(name, 'http://' + ip + path + lang, '', thumbnail = thumbnail)
+
+        def GetEpisodeUrl(self, langData, path):
+		reLang = re.compile('(.*?)\:(.*?)\:')
+                langMatcher = reLang.findall(langData)[0]
+                lang = langMatcher[0]
+                ip = langMatcher[1]
+                
+                return { 'url': 'http://' + ip + path + lang, 'lang': lang}
                 
 	def GetUser(self, url):
 		content = net.http_GET(url).content
