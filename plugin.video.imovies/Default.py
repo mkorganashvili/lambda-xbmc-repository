@@ -6,7 +6,7 @@ nav = Navigation.Navigation()
                         
 def CATEGORIES():
         nav.addDir('Users', '1', 'Users', '')
-        nav.addDir('TV Series', '1', 'TVSeriesRoot', '')
+        nav.addDir('TV Shows', '1', 'TVSeriesRoot', '')
 
         
 def get_params(paramstring = sys.argv[2]):

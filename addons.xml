@@ -2,7 +2,7 @@
 <addons>
 <addon id="plugin.video.adjaranet"
        name="Adjaranet.GE"
-       version="0.0.4"
+       version="0.0.5"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
@@ -20,7 +20,7 @@
 
 <addon id="plugin.video.imovies"
        name="imovies.ge"
-       version="0.0.11"
+       version="0.0.12"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
