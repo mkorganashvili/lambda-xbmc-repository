@@ -1,6 +1,6 @@
 ﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,sys
 
-class AdjaranetNavigation:
+class Navigation:
     def addLink(self, name, url, iconimage, thumbnail = ''):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=thumbnail)
@@ -10,7 +10,7 @@ class AdjaranetNavigation:
 
 
     def addDir(self, name, url, action, iconimage, params = {}, isFolder=True, thumbnail = ''):
-        u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&action=" + action + "&name=" + urllib.quote_plus(name)
+        u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&action=" + action + "&name=" + urllib.quote(name.encode('utf8'))
         if (len(params)):
                 str_params = ''
                 for key in params:

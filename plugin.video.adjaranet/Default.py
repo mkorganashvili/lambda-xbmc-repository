@@ -1,13 +1,11 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,TVStreamer,AdjaranetNavigation,VideoScraper
+﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,Scraper
 from datetime import datetime, date, timedelta
 
-nav = AdjaranetNavigation.AdjaranetNavigation()
+nav = Navigation.Navigation()
 
                         
 def CATEGORIES():
-        nav.addDir('Sherlock', 'http://adjaranet.com/Movie/main?id=1000080&serie=1', 'TVSeries', '')
-        nav.addDir('Elementary', 'http://adjaranet.com/Movie/main?id=1000059&serie=1', 'TVSeries', '')
-
+	nav.addDir('TV Shows', 'http://adjaranet.com/Search/SearchResults?ajax=1&display=30&offset=0&orderBy=date&order%5Border%5D=desc&order%5Bdata%5D=published&episode=1', 'TVShows', '')
         
 def get_params(paramstring = sys.argv[2]):
         param = []
@@ -64,45 +62,26 @@ if action==None or url==None or len(url)<1:
         print ""
         CATEGORIES()
        
-elif action=='TVSeries':
-        print ""+url
-	TVStreamer.TVStreamer().AddTvSeasons(url)
+elif action=='TVShows':
+	Scraper.Scraper().AddTvShows(url)
+	xbmc.executebuiltin("Container.SetViewMode(500)")
+
+elif action=='TVShow':
+	Scraper.Scraper().AddTvSeasons(url, itemparams)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
 
 elif action=='GetEpisodes':
-        print ""+url
-        TVStreamer.TVStreamer().GetEpisodes(url, get_params(url))
+        Scraper.Scraper().GetEpisodes(url, get_params(url), itemparams)
         xbmc.executebuiltin("Container.SetViewMode(51)")
-
-elif action=='gettvlinks':
-        print ""+url
-        TVStreamer.TVStreamer().GETTVLINKS(url,name)
-        
-elif action=='getdaytable':
-        TVStreamer.TVStreamer().GETDAYTABLE(url, itemparams)
-
-elif action=='choosetime':
-        TVStreamer.TVStreamer().CHOOSETIME(url, itemparams)
-
-elif action=='videos_GetCategories':
-        VideoScraper.VideoScraper().GetVideoCategories(url)
-
-elif action=='movie_categories':
-        VideoScraper.VideoScraper().GetMovieCategories(url, itemparams)
-
-elif action=='movie_names':
-        VideoScraper.VideoScraper().GetMovieNames(url)
-	xbmc.executebuiltin("Container.SetViewMode(500)")
-
-elif action=='video_getlinks':
-        VideoScraper.VideoScraper().GetVideoLinks(url)
-	xbmc.executebuiltin("Container.SetViewMode(500)")
-
-elif action=='movie_links':
-        VideoScraper.VideoScraper().GetMovieLinks(url)
-	xbmc.executebuiltin("Container.SetViewMode(500)")
-
-elif action=='video_play':
-        VideoScraper.VideoScraper().PlayVideo(url, itemparams)
-
+		
+elif action=='ChooseLanguage':
+        languages = Scraper.Scraper().GetLanguages(params["id"])
+	if len(languages) > 0:
+		ret = xbmcgui.Dialog().select("Choose Language", languages)
+		url = url.format(languages[ret])
+		xbmc.Player().play(url)
+	else:
+		xbmcgui.Dialog().ok("Warning", "No languages found")
+	
+	
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
