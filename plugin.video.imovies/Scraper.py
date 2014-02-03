@@ -41,6 +41,39 @@ class Scraper:
                         nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
 	
 	def GetEpisodes(self, url, params):
+		content = net.http_GET(url).content
+		itemList = common.parseDOM(content, "item")
+			
+		for item in itemList:
+			name = common.stripTags(common.replaceHTMLCodes(common.parseDOM(item, "description")[0]))
+			url = common.parseDOM(item, "jwplayer:source", ret="file")[0]
+			path = urlparse(url).path
+			langData = sorted(common.parseDOM(item, "jwplayer:source", ret="lang")[0].split(','))
+			episode = re.compile('([0-9]+)').findall(common.parseDOM(item, "title")[0])[0]
+			thumbnail = common.parseDOM(item, "jwplayer:image")[0]
+			
+			li = xbmcgui.ListItem(name, iconImage = thumbnail, thumbnailImage = thumbnail)
+			li.setInfo( type= "Video", 
+                                infoLabels =
+                                        {
+                                             "title": name,
+                                             "episode": episode,
+                                             "season": params["season"],
+                                             "tvshowtitle": params["title"]
+                                        } )
+
+                        contextMenuItems = []
+			for lang in langData[1:]:
+				common.log(lang)
+                                urlData = self.GetEpisodeUrl(lang, path)
+                                contextMenuItems.append((urlData['lang'], 'PlayMedia("' + urlData['url'] + '")'))
+                        li.addContextMenuItems(contextMenuItems)
+
+                        xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[0], path)['url'], listitem = li)
+
+			#nav.addLink(name, 'http://' + ip + path + lang, '', thumbnail = thumbnail)
+
+	def _GetEpisodes(self, url, params):
 		req = urllib2.Request(url)
 		req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
 		u = urllib2.urlopen(req)
