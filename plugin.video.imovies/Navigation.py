@@ -17,7 +17,7 @@ class Navigation:
 		ok = True
 		liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=thumbnail)
 		liz.setInfo( type="Video", infoLabels={ "Title": name } )
-        ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=isFolder)
+                ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=isFolder)
 		return ok
 		
 	def paramsToUrl(self, params):
