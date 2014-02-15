@@ -20,14 +20,14 @@
 
 <addon id="plugin.video.imovies"
        name="imovies.ge"
-       version="0.0.14"
+       version="0.0.15"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
 		<import addon="script.module.parsedom" version="0.9.1"/>
     </requires>
     <extension point="xbmc.python.pluginsource"
-               library="default.py">
+               library="Default.py">
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
@@ -39,14 +39,14 @@
 
 <addon id="plugin.video.iptv"
        name="IPTV.ge"
-       version="0.0.2"
+       version="0.0.3"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
 		<import addon="script.module.parsedom" version="0.9.1"/>
     </requires>
     <extension point="xbmc.python.pluginsource"
-               library="default.py">
+               library="Default.py">
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
@@ -58,14 +58,14 @@
 
 <addon id="plugin.video.myvideoge"
        name="MyVideo.ge"
-       version="0.0.2"
+       version="0.0.3"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="1.0"/>
 		<import addon="script.module.parsedom" version="0.9.1"/>
     </requires>
     <extension point="xbmc.python.pluginsource"
-               library="default.py">
+               library="Default.py">
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
