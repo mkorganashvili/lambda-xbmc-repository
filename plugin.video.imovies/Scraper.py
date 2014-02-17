@@ -1,4 +1,4 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,string,sys
+﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,string,sys,HTMLParser
 from datetime import datetime, date, timedelta
 from xml.dom import minidom
 from Lib.net import Net
@@ -71,46 +71,7 @@ class Scraper:
 
                         xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[0], path)['url'], listitem = li)
 
-			#nav.addLink(name, 'http://' + ip + path + lang, '', thumbnail = thumbnail)
-
-	def _GetEpisodes(self, url, params):
-		req = urllib2.Request(url)
-		req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
-		u = urllib2.urlopen(req)
-		xmldoc = minidom.parse(u)
-		u.close()
-		itemlist = xmldoc.getElementsByTagName('item') 
-			
-		for item in itemlist:
-			name = common.stripTags(item.getElementsByTagName('description')[0].firstChild.nodeValue)
-			url = item.getElementsByTagName('jwplayer:source')[0].attributes['file'].value
-			path = urlparse(url).path
-			langData = sorted(item.getElementsByTagName('jwplayer:source')[0].attributes['lang'].value.split(','))
-			episode = re.compile('([0-9]+)').findall(item.getElementsByTagName('title')[0].firstChild.nodeValue)[0]
-			thumbnail = item.getElementsByTagName('jwplayer:image')[0].firstChild.nodeValue
-			
-			li = xbmcgui.ListItem(name, iconImage = thumbnail, thumbnailImage = thumbnail)
-			li.setInfo( type= "Video", 
-                                infoLabels =
-                                        {
-                                             "title": name,
-                                             "episode": episode,
-                                             "season": params["season"],
-                                             "tvshowtitle": params["title"]
-                                        } )
-
-                        contextMenuItems = []
-			for lang in langData[1:]:
-				common.log(lang)
-                                urlData = self.GetEpisodeUrl(lang, path)
-                                contextMenuItems.append((urlData['lang'], 'PlayMedia("' + urlData['url'] + '")'))
-                        li.addContextMenuItems(contextMenuItems)
-
-                        xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[0], path)['url'], listitem = li)
-
-			#nav.addLink(name, 'http://' + ip + path + lang, '', thumbnail = thumbnail)
-
-        def GetEpisodeUrl(self, langData, path):
+	def GetEpisodeUrl(self, langData, path):
 		reLang = re.compile('(.*?)\:(.*?)\:')
                 langMatcher = reLang.findall(langData)[0]
                 lang = langMatcher[0]
@@ -123,16 +84,20 @@ class Scraper:
 		userBox = common.parseDOM(content, "div", attrs = { "class": "userbox" })[0]
 		name = common.parseDOM(userBox, "div", attrs = { "class": "firstname" })[0] + ' ' + common.parseDOM(userBox, "div", attrs = { "class": "lastname" })[0]
 		avatar = common.parseDOM(userBox, "img", ret="src")[0]
-		nav.addDir(name, url, 'WatchList', avatar, thumbnail = avatar)
+		nav.addDir(name, url + '/watchlist', 'ScrapPage', avatar, thumbnail = avatar)
 	
-	def GetWatchlist(self, url):
-		content = net.http_GET(url + '/watchlist').content
+	def GetTvShows(self, url):
+		content = net.http_GET(url).content
+		
+		ajaxContent = re.compile("\$j\('#films'\).html\(\"(.*?)\"\)", re.DOTALL).findall(content)
+		if ajaxContent:
+			content = ajaxContent[0].decode("string_escape").replace('\/', '/')
+		
 		items = common.parseDOM(content, "div", attrs = { "class": "item[^\"']*" })
 		
 		for item in items:
-			title_ge = re.sub('<[^<]+?>', '', common.parseDOM(item, "h2", attrs = { "class": "film_title[^\"']*" })[0])
-			title_en = re.sub('<[^<]+?>', '', common.parseDOM(item, "h2", attrs = { "class": "film_title[^\"']*" })[1])
-			imageDiv = common.parseDOM(item, "div", attrs = { "class": "cropped_image" })[0]
+			title_ge = re.sub('<[^<]+?>', '', common.parseDOM(item, "h", attrs = { "class": "film_title[^\"']*" })[0])
+			title_en = re.sub('<[^<]+?>', '', common.parseDOM(item, "h", attrs = { "class": "film_title[^\"']*" })[1])
 			movieUrl = common.parseDOM(item, "a", ret="href")[0]
 			thumbnail = common.parseDOM(item, "img", ret="src")[0]
 			
@@ -143,7 +108,7 @@ class Scraper:
 				fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
 				nav.addLink(title_en, fileUrl, 'movie', thumbnail)
 			else:
-				nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVSeries', '', thumbnail = thumbnail)
+				nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
 	
 	def GETTVLINKS(self, url, name):
 		req = urllib2.Request(url)

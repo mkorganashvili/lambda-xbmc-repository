@@ -5,8 +5,9 @@ nav = Navigation.Navigation()
 
                         
 def CATEGORIES():
-        nav.addDir('Users', '1', 'Users', '')
-        nav.addDir('TV Shows', '1', 'TVSeriesRoot', '')
+	nav.addDir('Users', '1', 'Users', '')
+	nav.addDir('TV Shows', '1', 'TVShowsRoot', '')
+	nav.addDir('Movies', '1', 'MoviesRoot', '')
 
         
 def get_params(paramstring = sys.argv[2]):
@@ -64,27 +65,30 @@ if action==None or url==None or len(url)<1:
         print ""
         CATEGORIES()
        
-elif action=='TVSeriesRoot':
-        nav.addDir('Elementary', 'http://www.imovies.ge/movies/37815', 'TVSeries', '')
-        nav.addDir('Klondike', 'http://www.imovies.ge/movies/42824', 'TVSeries', '')
+elif action=='TVShowsRoot':
+	nav.addDir('Recently Added', 'http://www.imovies.ge/tvseries', 'ScrapPage', '')
+
+elif action=='MoviesRoot':
+	nav.addDir('Recently Added', 'http://www.imovies.ge/watch', 'ScrapPage', '')
+	nav.addDir('Top of IMDB', 'http://www.imovies.ge/watch.php?sort=rating', 'ScrapPage', '')
+	nav.addDir('By year', 'http://www.imovies.ge/watch.php?sort=year', 'ScrapPage', '')
 
 elif action=='Users':
-        Scraper.Scraper().GetUser('http://www.imovies.ge/users/2091')
-        Scraper.Scraper().GetUser('http://www.imovies.ge/users/44657')
-        xbmc.executebuiltin("Container.SetViewMode(51)")
+	Scraper.Scraper().GetUser('http://www.imovies.ge/users/2091')
+	Scraper.Scraper().GetUser('http://www.imovies.ge/users/44657')
+	xbmc.executebuiltin("Container.SetViewMode(51)")
 
-elif action=='TVSeries':
-        print ""+url
+elif action=='TVShow':
+	print ""+url
 	Scraper.Scraper().GetSeasons(url)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
 
-elif action=='WatchList':
-        Scraper.Scraper().GetWatchlist(url)
-        xbmc.executebuiltin("Container.SetViewMode(500)")
+elif action=='ScrapPage':
+	Scraper.Scraper().GetTvShows(url)
+	xbmc.executebuiltin("Container.SetViewMode(500)")
 
 elif action=='GetEpisodes':
-        print ""+url
-        Scraper.Scraper().GetEpisodes(url, itemparams)
-        xbmc.executebuiltin("Container.SetViewMode(50)")
+	Scraper.Scraper().GetEpisodes(url, itemparams)
+	xbmc.executebuiltin("Container.SetViewMode(50)")
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
