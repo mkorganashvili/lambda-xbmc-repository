@@ -1,7 +1,17 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,Scraper
+﻿import urllib,urllib2,re
+import xbmc,xbmcplugin,xbmcgui,xbmcaddon
+import datetime,locale,time,Navigation,Scraper
+import os
 from datetime import datetime, date, timedelta
 
+addon = xbmcaddon.Addon()
+addonID = addon.getAddonInfo('id')
 nav = Navigation.Navigation()
+
+usersFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/users.json")
+
+while (not os.path.exists(xbmc.translatePath("special://profile/addon_data/"+addonID+"/settings.xml"))):
+	addon.openSettings()
 
                         
 def CATEGORIES():
@@ -74,8 +84,8 @@ elif action=='MoviesRoot':
 	nav.addDir('By year', 'http://www.imovies.ge/watch.php?sort=year', 'ScrapPage', '')
 
 elif action=='Users':
-	Scraper.Scraper().GetUser('http://www.imovies.ge/users/2091')
-	Scraper.Scraper().GetUser('http://www.imovies.ge/users/44657')
+	Scraper.Scraper().LoadUsers()
+	nav.addDir('Add User', 'http://www.imovies.ge/users/', 'AddUser', 'http://icons.iconarchive.com/icons/fasticon/fast-icon-users/48/add-user-icon.png', isFolder=False)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
 
 elif action=='TVShow':
@@ -90,5 +100,9 @@ elif action=='ScrapPage':
 elif action=='GetEpisodes':
 	Scraper.Scraper().GetEpisodes(url, itemparams)
 	xbmc.executebuiltin("Container.SetViewMode(50)")
+
+elif action=='AddUser':
+	Scraper.Scraper().AddUser()
+	xbmc.executebuiltin("Container.Refresh")
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
