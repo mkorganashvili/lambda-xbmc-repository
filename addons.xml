@@ -58,10 +58,10 @@
 
 <addon id="plugin.video.myvideoge"
        name="MyVideo.ge"
-       version="0.0.3"
+       version="0.0.4"
        provider-name="lambda.ge">
     <requires>
-        <import addon="xbmc.python" version="2.1.0"/>
+        <import addon="xbmc.python" version="1.0"/>
 		<import addon="script.module.parsedom" version="0.9.1"/>
     </requires>
     <extension point="xbmc.python.pluginsource"

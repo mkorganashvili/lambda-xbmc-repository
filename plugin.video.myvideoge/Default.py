@@ -57,14 +57,21 @@ print "Name: " + str(name)
 
 
 if action==None or url==None or len(url)<1:
-        nav.addDir('Channels', 'http://www.myvideo.ge/c/livetv', 'Channels', '')
-        xbmc.executebuiltin("Container.SetViewMode(50)")
+	nav.addDir('Channels', 'http://www.myvideo.ge/c/livetv', 'Channels', '')
+	xbmc.executebuiltin("Container.SetViewMode(50)")
        
 elif action=='Channels':
-		Scraper.Scraper().GetChannels(url)
-		xbmc.executebuiltin("Container.SetViewMode(500)")
+	Scraper.Scraper().GetChannels(url)
+	xbmc.executebuiltin("Container.SetViewMode(500)")
 
+elif action=='Channel':
+	Scraper.Scraper().GetTvSchedule(url)
+	xbmc.executebuiltin("Container.SetViewMode(50)")
+	
+elif action=='PlayByTime':
+	Scraper.Scraper().PlayByTime(url, itemparams)
+	
 elif action=='PlayTV':
-	Scraper.Scraper().PlayTV(url)
+	Scraper.Scraper().PlayTV(url, itemparams)
 		
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

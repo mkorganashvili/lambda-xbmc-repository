@@ -15,7 +15,7 @@ nav = Navigation()
 net = Net()
 
 BASE_URL = 'http://www.myvideo.ge'
-RTMP_URL = ' app=dvrh264/{0} playpath=mp4:{0} swfUrl=http://www.myvideo.ge/dvr/dvrAvatar7.swf?v=1.91 pageURL=http://www.myvideo.ge live=true'
+RTMP_URL = ' app=dvrh264/{0} playpath={1} swfUrl=http://www.myvideo.ge/dvr/dvrAvatar7.swf?v=1.91 pageURL=http://www.myvideo.ge'
     
 class Scraper:
     
@@ -31,44 +31,56 @@ class Scraper:
 			icon = BASE_URL + re.compile("background-image:url\('(.*?)'\)").findall(icon)[0]
 			name = common.stripTags(name).encode('utf-8')
 			
-			nav.addDir(name, BASE_URL + '/' + href, 'PlayTV', icon, thumbnail = icon, isFolder = False)
+			nav.addDir(name, BASE_URL + '/' + href, 'Channel', icon, thumbnail = icon)
 	
-	
-	def PlayTV(self, url):
-			content = net.http_GET(url).content
-			flashvars = re.compile("var flashvars = \{(.*?)\}", re.DOTALL).findall(content)[0]			
-			chan = re.compile("'chan':'(.*?)'").findall(flashvars)[0]
-			dvrServer = re.compile("'dvrServer':'(.*?)'").findall(flashvars)[0]
-			name = common.parseDOM(content, "div", attrs = { "class": "mv_user_channel_name[^\"']*" })[0]
-			name = common.stripTags(name)
+	def GetTvSchedule(self, url):
+		playerParams = self.GetPlayerData(url)
+		nav.addDir('Live', '#', 'PlayTV', '', playerParams, isFolder = False)
+		
+		params = common.getParameters(url)
+		scheduleUrl = 'http://www.myvideo.ge/dvr_getfile.php?mode=prog&chan={0}&date={1:%Y-%m-%d}'.format(params['chan'], datetime.now())
+		content = net.http_GET(scheduleUrl, { "Cookie": "lang_id=eng"}).content
+		
+		common.log(scheduleUrl)
+		
+		progs = common.parseDOM(content, "prog")
+		for prog in progs:
+			date = common.parseDOM(prog, 'date')
+			time = common.parseDOM(prog, 'time')[0]
+			mins = common.parseDOM(prog, 'mins')[0]
+			name = common.parseDOM(prog, 'name')[0]
+			pss = common.parseDOM(prog, 'pass')
+			timeUrl = BASE_URL + '/dvr_getfile.php?mode=file&chan={0}&date={1}'.format(params['chan'], urllib.quote_plus(time))
 			
-			listitem = xbmcgui.ListItem(name)
-			listitem.setInfo('video', {'Title': name})
-			xbmc.Player().play(dvrServer + RTMP_URL.format(chan), listitem)
+			nav.addDir(mins.encode('utf-8') + ' - ' + name.encode('utf-8'), timeUrl, 'PlayByTime', '', playerParams, isFolder = False)
+			
+	def PlayByTime(self, url, params):		
+		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
+		file = common.parseDOM(content, 'file')[0]
+	
+		listitem = xbmcgui.ListItem(params['name'])
+		listitem.setInfo('video', {'Title': params['name']})
+		xbmc.Player().play(params['dvrServer'] + RTMP_URL.format(params['chan'], file), listitem)
+		
+	def PlayTV(self, url, params):
+		listitem = xbmcgui.ListItem(params['name'])
+		listitem.setInfo('video', {'Title': params['name']})
+		xbmc.Player().play(params['dvrServer'] + RTMP_URL.format(params['chan'], 'mp4:' + params['chan']) + ' live=true', listitem)
 
-		
-	
-	def GetWatchlist(self, url):
-		content = net.http_GET(url + '/watchlist').content
-		items = common.parseDOM(content, "div", attrs = { "class": "item[^\"']*" })
-		
-		for item in items:
-			title_ge = re.sub('<[^<]+?>', '', common.parseDOM(item, "h2", attrs = { "class": "film_title[^\"']*" })[0])
-			title_en = re.sub('<[^<]+?>', '', common.parseDOM(item, "h2", attrs = { "class": "film_title[^\"']*" })[1])
-			imageDiv = common.parseDOM(item, "div", attrs = { "class": "cropped_image" })[0]
-			movieUrl = common.parseDOM(item, "a", ret="href")[0]
-			thumbnail = common.parseDOM(item, "img", ret="src")[0]
-			
-			movieId = common.parseDOM(item, "a", attrs = { "class": "wishlist[^\"']*" }, ret="film_id")[0]
-			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
-			movieItems = common.parseDOM(movieInfo, "item")
-			if movieItems:
-				fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
-				nav.addLink(title_en, fileUrl, 'movie', thumbnail)
-			else:
-				nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVSeries', '', thumbnail = thumbnail)
-	
-    
+	def GetPlayerData(self, url):
+		content = net.http_GET(url).content
+		flashvars = re.compile("var flashvars = \{(.*?)\}", re.DOTALL).findall(content)[0]			
+		chan = re.compile("'chan':'(.*?)'").findall(flashvars)[0]
+		dvrServer = re.compile("'dvrServer':'(.*?)'").findall(flashvars)[0]
+		name = common.parseDOM(content, "div", attrs = { "class": "mv_user_channel_name[^\"']*" })[0]
+		name = common.stripTags(name).encode('utf8')
+		common.log(urllib.quote_plus(name))
+		return {
+			'chan': chan,
+			'dvrServer': dvrServer,
+			'name': name
+		}
+ 
 	class TVPlayer(xbmc.Player):
 		def onPlayBackStopped(self):
 			print 'opaaa finish'
