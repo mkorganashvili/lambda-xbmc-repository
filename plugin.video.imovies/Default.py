@@ -16,6 +16,7 @@ while (not os.path.exists(xbmc.translatePath("special://profile/addon_data/"+add
                         
 def CATEGORIES():
 	nav.addDir('Users', '1', 'Users', '')
+	nav.addDir('Lists', '1', 'Lists', '')
 	nav.addDir('TV Shows', '1', 'TVShowsRoot', '')
 	nav.addDir('Movies', '1', 'MoviesRoot', '')
 
@@ -88,6 +89,11 @@ elif action=='Users':
 	nav.addDir('Add User', 'http://www.imovies.ge/users/', 'AddUser', 'http://icons.iconarchive.com/icons/fasticon/fast-icon-users/48/add-user-icon.png', isFolder=False)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
 
+elif action=='Lists':
+	Scraper.Scraper().LoadLists()
+	nav.addDir('Add List', 'http://www.imovies.ge/lists/', 'AddList', 'http://icons.iconarchive.com/icons/visualpharm/icons8-metro-style/48/Adds-Add-list-icon.png', isFolder=False)
+	xbmc.executebuiltin("Container.SetViewMode(51)")
+
 elif action=='TVShow':
 	print ""+url
 	Scraper.Scraper().GetSeasons(url)
@@ -97,12 +103,20 @@ elif action=='ScrapPage':
 	Scraper.Scraper().GetTvShows(url)
 	xbmc.executebuiltin("Container.SetViewMode(500)")
 
+elif action=='ScrapListPage':
+	Scraper.Scraper().ScrapListPage(url)
+	xbmc.executebuiltin("Container.SetViewMode(500)")
+
 elif action=='GetEpisodes':
 	Scraper.Scraper().GetEpisodes(url, itemparams)
 	xbmc.executebuiltin("Container.SetViewMode(50)")
 
 elif action=='AddUser':
 	Scraper.Scraper().AddUser()
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='AddList':
+	Scraper.Scraper().AddList()
 	xbmc.executebuiltin("Container.Refresh")
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

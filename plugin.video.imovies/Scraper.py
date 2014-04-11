@@ -13,6 +13,7 @@ addon = xbmcaddon.Addon()
 addonID = addon.getAddonInfo('id')
 
 usersFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/users.json")
+listsFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/lists.json")
 _preferredLanguage = addon.getSetting('preferredLanguage')
 
 common = CommonFunctions
@@ -62,6 +63,9 @@ class Scraper:
 			langData = sorted(common.parseDOM(item, "jwplayer:source", ret="lang")[0].split(','))
 			episode = re.compile('([0-9]+)').findall(common.parseDOM(item, "title")[0])[0]
 			thumbnail = common.parseDOM(item, "jwplayer:image")[0]
+			
+			if not name:
+				name = "Episode " + str(episode)
 			
 			li = xbmcgui.ListItem(name, iconImage = thumbnail, thumbnailImage = thumbnail)
 			li.setInfo( type= "Video", 
@@ -137,6 +141,48 @@ class Scraper:
 		for user in usersData:
 			nav.addDir(user["name"], user["url"], 'ScrapPage', user["thumbnail"], thumbnail = user["thumbnail"])
 	
+	def AddList(self):
+		dialog = xbmcgui.Dialog()
+		id = dialog.numeric(0, 'Enter list ID')
+		
+		if len(id) == 0:
+			return
+		
+		url = 'http://www.imovies.ge/lists/' + id
+		try:
+			content = net.http_GET(url).content
+		except:
+			dialog.ok('Error', 'Cannot find user!')
+			return
+		
+		contentDiv = common.parseDOM(content, "div", attrs = { "class": "content" })
+		if len(contentDiv) == 0:
+			return
+		name = common.parseDOM(contentDiv, "h1")[0]
+
+		if not dialog.yesno('Confirm List', 'Confirm to add list: ', name):
+			return
+		
+		listsData = []
+		if os.path.exists(listsFilePath):
+			jsonData = open(listsFilePath)
+			listsData = json.load(jsonData)
+		listsData.append({
+			"name": name,
+			"url": url
+		})
+		with open(listsFilePath, 'w') as outfile:
+			json.dump(listsData, outfile)
+	
+	def LoadLists(self):
+		if not os.path.exists(listsFilePath):
+			return
+		
+		jsonData = open(listsFilePath)
+		listsData = json.load(jsonData)
+		for list in listsData:
+			nav.addDir(list["name"].encode('utf8'), list["url"], 'ScrapListPage', '')
+	
 	def GetTvShows(self, url):
 		content = net.http_GET(url).content
 		
@@ -160,5 +206,26 @@ class Scraper:
 				nav.addLink(title_en, fileUrl, 'movie', thumbnail)
 			else:
 				nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
+
+    
+	def ScrapListPage(self, url):
+		content = net.http_GET(url).content
+		
+		items = common.parseDOM(content, "li", attrs = { "class": "clearfix" })
+		
+		for item in items:
+			filmTitle = common.parseDOM(item, "div", attrs = { "class": "film_title" })
+			title = common.stripTags(filmTitle[0])
+			movieUrl = common.parseDOM(item, "a", ret="href")[0]
+			thumbnail = common.parseDOM(item, "img", ret="src")[0]
+			
+			movieId = common.parseDOM(item, "a", ret="href")[0]
+			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
+			movieItems = common.parseDOM(movieInfo, "item")
+			if movieItems:
+				fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
+				nav.addLink(title.encode('utf8'), fileUrl, 'movie', thumbnail)
+			else:
+				nav.addDir(title.encode('utf8'), 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
 
     
