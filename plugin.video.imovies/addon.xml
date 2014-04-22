@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.imovies"
        name="imovies.ge"
-       version="0.1.1"
+       version="0.1.2"
        provider-name="lambda.ge">
     <requires>
         <import addon="xbmc.python" version="2.1.0"/>
@@ -14,6 +14,6 @@
     <extension point="xbmc.addon.metadata">
         <platform>all</platform>
         <summary>imovies.ge Scraper plugin</summary>
-        <description>Watch TV Series from your XBMC Media Center directly from imovies.ge</description>
+        <description>Watch TV Shows from your XBMC Media Center directly from imovies.ge</description>
     </extension>
 </addon>

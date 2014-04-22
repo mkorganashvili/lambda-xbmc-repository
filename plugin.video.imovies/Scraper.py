@@ -1,6 +1,6 @@
 ﻿import urllib,urllib2,re
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-import sys, os, datetime, locale, time, string, HTMLParser, json
+import sys, os, datetime, locale, time, string, HTMLParser, json, uuid
 from datetime import datetime, date, timedelta
 from xml.dom import minidom
 from Lib.net import Net
@@ -14,6 +14,7 @@ addonID = addon.getAddonInfo('id')
 
 usersFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/users.json")
 listsFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/lists.json")
+moviesFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/movies.json")
 _preferredLanguage = addon.getSetting('preferredLanguage')
 
 common = CommonFunctions
@@ -139,8 +140,20 @@ class Scraper:
 		jsonData = open(usersFilePath)
 		usersData = json.load(jsonData)
 		for user in usersData:
-			nav.addDir(user["name"], user["url"], 'ScrapPage', user["thumbnail"], thumbnail = user["thumbnail"])
+			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveUser&url=%s)' % (sys.argv[0], urllib.quote_plus(user["url"])))]
+			nav.addDir(user["name"], user["url"], 'ScrapPage', user["thumbnail"], thumbnail = user["thumbnail"], contextMenuItems = contextMenuItems)
 	
+	def RemoveUser(self, url):
+		jsonData = open(usersFilePath)
+		usersData = json.load(jsonData)
+		user = filter(lambda user: user['url'] == url, usersData)[0]
+		dialog = xbmcgui.Dialog()
+		if not dialog.yesno('Confirm Remove', 'Are you sure you want to remove \'' + user['name'] + '\'?'):
+			return
+		usersData.remove(user)
+		with open(usersFilePath, 'w') as outfile:
+			json.dump(usersData, outfile)
+
 	def AddList(self):
 		dialog = xbmcgui.Dialog()
 		id = dialog.numeric(0, 'Enter list ID')
@@ -181,7 +194,78 @@ class Scraper:
 		jsonData = open(listsFilePath)
 		listsData = json.load(jsonData)
 		for list in listsData:
-			nav.addDir(list["name"].encode('utf8'), list["url"], 'ScrapListPage', '')
+			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveList&url=%s)' % (sys.argv[0], urllib.quote_plus(list["url"])))]
+			nav.addDir(list["name"].encode('utf8'), list["url"], 'ScrapListPage', '', contextMenuItems = contextMenuItems)
+	
+	def RemoveList(self, url):
+		jsonData = open(listsFilePath)
+		listsData = json.load(jsonData)
+		list = filter(lambda list: list['url'] == url, listsData)[0]
+		dialog = xbmcgui.Dialog()
+		if not dialog.yesno('Confirm Remove', 'Are you sure you want to remove \'' + list['name'] + '\'?'):
+			return
+		listsData.remove(list)
+		with open(listsFilePath, 'w') as outfile:
+			json.dump(listsData, outfile)
+
+	def AddTvShow(self):
+		dialog = xbmcgui.Dialog()
+		id = dialog.numeric(0, 'Enter TV Show ID')
+		
+		if len(id) == 0:
+			return
+		
+		url = 'http://www.imovies.ge/movies/' + id
+		try:
+			content = net.http_GET(url).content
+		except:
+			dialog.ok('Error', 'Cannot find tv show!')
+			return
+		
+		contentDiv = common.parseDOM(content, "div", attrs = { "id": "infodiv" })
+		if len(contentDiv) == 0:
+			return
+			
+		name = common.parseDOM(contentDiv, "h2")[0]
+
+		if not dialog.yesno('Confirm TV Show', 'Confirm to add TV Show: ', name):
+			return
+
+		thumbnailDiv = common.parseDOM(content, "div", attrs = { "class": "distributor" })
+		thumbnail = common.parseDOM(thumbnailDiv, "img", ret="src")[0]
+			
+		movieData = []
+		if os.path.exists(moviesFilePath):
+			jsonData = open(moviesFilePath)
+			movieData = json.load(jsonData)
+		movieData.append({
+			"name": name,
+			"thumbnail": 'http://www.imovies.ge' + thumbnail,
+			"url": url
+		})
+		with open(moviesFilePath, 'w') as outfile:
+			json.dump(movieData, outfile)
+	
+	def LoadTvShows(self):
+		if not os.path.exists(moviesFilePath):
+			return
+		
+		jsonData = open(moviesFilePath)
+		movieData = json.load(jsonData)
+		for movie in movieData:
+			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveTvShow&url=%s)' % (sys.argv[0], urllib.quote_plus(movie["url"])))]
+			nav.addDir(movie["name"].encode('utf8'), movie["url"], 'TVShow', movie['thumbnail'], contextMenuItems = contextMenuItems)
+	
+	def RemoveTvShow(self, url):
+		jsonData = open(moviesFilePath)
+		movieData = json.load(jsonData)
+		movie = filter(lambda movie: movie['url'] == url, movieData)[0]
+		dialog = xbmcgui.Dialog()
+		if not dialog.yesno('Confirm Remove', 'Are you sure you want to remove \'' + movie['name'] + '\'?'):
+			return
+		movieData.remove(movie)
+		with open(moviesFilePath, 'w') as outfile:
+			json.dump(movieData, outfile)
 	
 	def GetTvShows(self, url):
 		content = net.http_GET(url).content

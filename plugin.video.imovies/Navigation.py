@@ -9,7 +9,7 @@ class Navigation:
 		return ok
 
 
-	def addDir(self, name, url, action, iconimage, params = {}, isFolder=True, thumbnail = ''):
+	def addDir(self, name, url, action, iconimage, params = {}, isFolder=True, thumbnail = '', contextMenuItems = []):
 		u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&action=" + action + "&name=" + urllib.quote_plus(name)
 		if (len(params)):
 			str_params = self.paramsToUrl(params)
@@ -17,7 +17,8 @@ class Navigation:
 		ok = True
 		liz = xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=thumbnail)
 		liz.setInfo( type="Video", infoLabels={ "Title": name } )
-                ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=isFolder)
+		liz.addContextMenuItems(contextMenuItems)
+		ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=isFolder)
 		return ok
 		
 	def paramsToUrl(self, params):

@@ -78,6 +78,8 @@ if action==None or url==None or len(url)<1:
        
 elif action=='TVShowsRoot':
 	nav.addDir('Recently Added', 'http://www.imovies.ge/tvseries', 'ScrapPage', '')
+	Scraper.Scraper().LoadTvShows()
+	nav.addDir('Add TV Show', 'http://www.imovies.ge/movies/', 'AddTvShow', 'http://icons.iconarchive.com/icons/dryicons/aesthetica-2/128/movie-track-add-icon.png', isFolder=False)
 
 elif action=='MoviesRoot':
 	nav.addDir('Recently Added', 'http://www.imovies.ge/watch', 'ScrapPage', '')
@@ -115,8 +117,24 @@ elif action=='AddUser':
 	Scraper.Scraper().AddUser()
 	xbmc.executebuiltin("Container.Refresh")
 
+elif action=='RemoveUser':
+	Scraper.Scraper().RemoveUser(url)
+	xbmc.executebuiltin("Container.Refresh")
+
 elif action=='AddList':
 	Scraper.Scraper().AddList()
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='RemoveList':
+	Scraper.Scraper().RemoveList(url)
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='AddTvShow':
+	Scraper.Scraper().AddTvShow()
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='RemoveTvShow':
+	Scraper.Scraper().RemoveTvShow(url)
 	xbmc.executebuiltin("Container.Refresh")
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
