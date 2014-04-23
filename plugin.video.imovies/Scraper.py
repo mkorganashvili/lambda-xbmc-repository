@@ -1,6 +1,6 @@
 ﻿import urllib,urllib2,re
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-import sys, os, datetime, locale, time, string, HTMLParser, json, uuid
+import sys, os, datetime, locale, time, string, HTMLParser, json
 from datetime import datetime, date, timedelta
 from xml.dom import minidom
 from Lib.net import Net
