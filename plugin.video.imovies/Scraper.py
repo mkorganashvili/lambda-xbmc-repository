@@ -16,6 +16,7 @@ usersFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "
 listsFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/lists.json")
 moviesFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/movies.json")
 _preferredLanguage = addon.getSetting('preferredLanguage')
+_preferredVideoQuality = addon.getSetting('preferredVideoQuality')
 
 common = CommonFunctions
 common.plugin = 'imovies.ge'
@@ -59,7 +60,13 @@ class Scraper:
 			
 		for item in itemList:
 			name = common.stripTags(common.replaceHTMLCodes(common.parseDOM(item, "description")[0]))
-			url = common.parseDOM(item, "jwplayer:source", ret="file")[0]
+			
+			url = common.parseDOM(item, "jwplayer:source", attrs = {"label": _preferredVideoQuality}, ret="file")
+			if len(url):
+				url = url[0]
+			else:
+				url = common.parseDOM(item, "jwplayer:source", ret="file")[0]
+				
 			path = urlparse(url).path
 			langData = sorted(common.parseDOM(item, "jwplayer:source", ret="lang")[0].split(','))
 			episode = re.compile('([0-9]+)').findall(common.parseDOM(item, "title")[0])[0]
@@ -283,13 +290,45 @@ class Scraper:
 			thumbnail = common.parseDOM(item, "img", ret="src")[0]
 			
 			movieId = common.parseDOM(item, "a", attrs = { "class": "wishlist[^\"']*" }, ret="film_id")[0]
-			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
+			#movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
+			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_jwQ.php?movie_id=' + movieId).content
 			movieItems = common.parseDOM(movieInfo, "item")
 			if movieItems:
-				fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
-				nav.addLink(title_en, fileUrl, 'movie', thumbnail)
-			else:
-				nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
+				videoUrl = common.parseDOM(movieItems, "jwplayer:source", attrs = {"label": _preferredVideoQuality}, ret="file")
+				if len(videoUrl):
+					videoUrl = videoUrl[0]
+				else:
+					videoUrl = common.parseDOM(movieItems, "jwplayer:source", ret="file")
+					if len(videoUrl):
+						videoUrl = videoUrl[0]
+					else:
+						nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
+						continue
+						
+				path = urlparse(videoUrl).path
+				langData = sorted(common.parseDOM(movieItems, "jwplayer:source", ret="lang")[0].split(','))
+
+				li = xbmcgui.ListItem(title_en, iconImage = thumbnail, thumbnailImage = thumbnail)
+				li.setInfo( type= "Video", 
+                                infoLabels =
+                                        {
+                                             "title": title_en
+                                        } )
+
+				langIndex = 0
+				contextMenuItems = []
+				for lang in langData:
+					urlData = self.GetEpisodeUrl(lang, path)
+					if urlData['lang'] == _preferredLanguage:
+						langIndex = langData.index(lang)
+					contextMenuItems.append((urlData['lang'], 'PlayMedia("' + urlData['url'] + '")'))
+				
+				contextMenuItems.pop(langIndex)
+				li.addContextMenuItems(contextMenuItems)			
+				xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[langIndex], path)['url'], listitem = li)
+					
+				#fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
+				#nav.addLink(title_en, fileUrl, 'movie', thumbnail)
 
     
 	def ScrapListPage(self, url):
