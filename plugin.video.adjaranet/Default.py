@@ -5,7 +5,7 @@ nav = Navigation.Navigation()
 
                         
 def CATEGORIES():
-	nav.addDir('TV Shows', 'http://adjaranet.com/Search/SearchResults?ajax=1&display=30&offset=0&orderBy=date&order%5Border%5D=desc&order%5Bdata%5D=published&episode=1', 'TVShows', '')
+	nav.addDir('TV Shows', 'http://adjaranet.com/Search/SearchResults?ajax=1&display=120&offset=0&orderBy=date&order%5Border%5D=desc&order%5Bdata%5D=published&episode=1', 'TVShows', '')
         
 def get_params(paramstring = sys.argv[2]):
         param = []
