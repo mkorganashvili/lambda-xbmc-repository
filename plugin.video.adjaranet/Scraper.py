@@ -1,14 +1,21 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,string,json,sys
+﻿import urllib,urllib2,re,datetime,locale,time,Navigation,string,json
 from datetime import datetime, date, timedelta
 from Lib.net import Net
 import CommonFunctions
+import xbmcplugin, xbmcgui, xbmc, xbmcaddon
+import os, sys
 
 nav = Navigation.Navigation()
 net = Net()
+addon = xbmcaddon.Addon()
+addonID = addon.getAddonInfo('id')
+
 common = CommonFunctions
 common.plugin = "plugin.video.imovies"
 common.dbg = True
-common.dbglevel = 2
+common.dbglevel = 5
+
+moviesFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/movies.json")
 
 class Scraper:
     
@@ -78,4 +85,80 @@ class Scraper:
 			languages.append("English")
 			
 		return languages
+		
+	def AddMovie(self):
+		dialog = xbmcgui.Dialog()
+		id = dialog.numeric(0, 'Enter movie ID')
+		
+		if len(id) == 0:
+			return
+		
+		url = 'http://adjaranet.com/test/newPlayer.php?id=' + id
+
+		net.set_user_agent('Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36')
+		try:
+			content = net.http_GET(url, {'referer': url}).content
+		except:
+			dialog.ok('Error', 'Cannot find movie!')
+			return
+		
+		common.log(content)
+		
+		movie_id = re.search('var movie_id = \'(.+?)\'', content).group(1)
+		moviepath = re.search('var moviepath = \'(.*?)\'', content).group(1)
+		languages = sorted(json.loads(re.search('var javascript_array = (\[.*?\]);', content).group(1)))
+		maxres = re.search('var maxres = \'(.*?)\'', content).group(1)
+		
+		videoUrl = moviepath + languages[0] + '_' + maxres + '.mp4'
+		
+		common.log(videoUrl)
+		
+		url = 'http://adjaranet.com/Movie/main?id=' + id
+		content = net.http_GET(url).content
+		
+		infoDiv = common.parseDOM(content, 'div', attrs = {'id': 'movie-info-inner'})
+		name = common.parseDOM(infoDiv, 'h1')[0]
+		
+		posterDiv = common.parseDOM(content, 'div', attrs = {'id': 'movie-poster'})
+		poster = common.parseDOM(posterDiv, 'img', ret='src')[0]
+		
+		common.log(poster)
+		
+		common.log(name)
+		
+		data = []
+		if os.path.exists(moviesFilePath):
+			jsonData = open(moviesFilePath)
+			data = json.load(jsonData)
+		data.append({
+			"name": name,
+			"url": videoUrl,
+			"poster": poster
+		})
+		with open(moviesFilePath, 'w') as outfile:
+			json.dump(data, outfile)
+		
+		
+	def LoadMovies(self):
+		if not os.path.exists(moviesFilePath):
+			return
+		
+		jsonData = open(moviesFilePath)
+		data = json.load(jsonData)
+		for item in data:
+			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveMovie&url=%s)' % (sys.argv[0], urllib.quote_plus(item["url"])))]
+			nav.addLink(item["name"].encode('utf8'), item["url"], item["poster"], item["poster"], contextMenuItems = contextMenuItems)
+				
+	
+	def RemoveMovie(self, url):
+		jsonData = open(moviesFilePath)
+		data = json.load(jsonData)
+		item = filter(lambda item: item['url'] == url, data)[0]
+		dialog = xbmcgui.Dialog()
+		if not dialog.yesno('Confirm Remove', 'Are you sure you want to remove \'' + item['name'] + '\'?'):
+			return
+		data.remove(item)
+		with open(moviesFilePath, 'w') as outfile:
+			json.dump(data, outfile)		
+		
 		

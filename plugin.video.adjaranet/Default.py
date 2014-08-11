@@ -1,11 +1,19 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Navigation,Scraper
+﻿import urllib,urllib2,re,datetime,locale,time,Navigation,Scraper
 from datetime import datetime, date, timedelta
+import xbmc, xbmcgui, xbmcaddon, xbmcplugin
+import os
 
 nav = Navigation.Navigation()
-
+addon = xbmcaddon.Addon()
+addonID = addon.getAddonInfo('id')
                         
+while (not os.path.exists(xbmc.translatePath("special://profile/addon_data/"+addonID+"/settings.xml"))):
+	addon.openSettings()						
+						
 def CATEGORIES():
 	nav.addDir('TV Shows', 'http://adjaranet.com/Search/SearchResults?ajax=1&display=120&offset=0&orderBy=date&order%5Border%5D=desc&order%5Bdata%5D=published&country=false&episode=1', 'TVShows', '')
+	nav.addDir('Movies', '1', 'MoviesRoot', '')
+
         
 def get_params(paramstring = sys.argv[2]):
         param = []
@@ -83,5 +91,17 @@ elif action=='ChooseLanguage':
 	else:
 		xbmcgui.Dialog().ok("Warning", "No languages found")
 	
+elif action=='MoviesRoot':
+	Scraper.Scraper().LoadMovies()
+	nav.addDir('Add Movie', '1', 'AddMovie', 'http://icons.iconarchive.com/icons/dryicons/aesthetica-2/128/movie-track-add-icon.png', isFolder=False)
+	xbmc.executebuiltin("Container.SetViewMode(51)")
+	
+elif action=='AddMovie':
+	Scraper.Scraper().AddMovie()
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='RemoveMovie':
+	Scraper.Scraper().RemoveMovie(url)
+	xbmc.executebuiltin("Container.Refresh")
 	
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

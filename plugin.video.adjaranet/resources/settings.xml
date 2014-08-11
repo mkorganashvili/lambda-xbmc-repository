@@ -1,0 +1,4 @@
+<settings>
+   <setting id="preferredLanguage" type="labelenum" label="Preferred Language" values="English|Russian|Georgian" default="0"/>
+   <setting id="preferredVideoQuality" type="labelenum" label="Preferred Video Quality" values="HD|HIGH|MEDIUM" default="0"/>
+</settings>
