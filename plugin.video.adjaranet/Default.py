@@ -91,7 +91,8 @@ elif action=='ChooseLanguage':
 	else:
 		xbmcgui.Dialog().ok("Warning", "No languages found")
 	
-elif action=='MoviesRoot':
+elif action=='MoviesRoot': 
+	nav.addDir('Collectons', 'http://adjaranet.com/Collections/', 'MovieCollections', '')
 	Scraper.Scraper().LoadMovies()
 	nav.addDir('Add Movie', '1', 'AddMovie', 'http://icons.iconarchive.com/icons/dryicons/aesthetica-2/128/movie-track-add-icon.png', isFolder=False)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
@@ -103,5 +104,16 @@ elif action=='AddMovie':
 elif action=='RemoveMovie':
 	Scraper.Scraper().RemoveMovie(url)
 	xbmc.executebuiltin("Container.Refresh")
+	
+elif action=='MovieCollections':
+	Scraper.Scraper().GetCollections(url)
+	xbmc.executebuiltin("Container.SetViewMode(51)")
+	
+elif action=='GetMovies':
+	Scraper.Scraper().GetMovies(url);
+	xbmc.executebuiltin("Container.SetViewMode(500)")
+	
+elif action=='PlayMovie':
+	Scraper.Scraper().PlayMovie(url)
 	
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

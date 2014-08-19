@@ -85,14 +85,8 @@ class Scraper:
 			languages.append("English")
 			
 		return languages
-		
-	def AddMovie(self):
-		dialog = xbmcgui.Dialog()
-		id = dialog.numeric(0, 'Enter movie ID')
-		
-		if len(id) == 0:
-			return
-		
+
+	def GetMovie(self, id):
 		url = 'http://adjaranet.com/test/newPlayer.php?id=' + id
 
 		net.set_user_agent('Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36')
@@ -121,19 +115,30 @@ class Scraper:
 		
 		posterDiv = common.parseDOM(content, 'div', attrs = {'id': 'movie-poster'})
 		poster = common.parseDOM(posterDiv, 'img', ret='src')[0]
+
+		return {
+			'name': name,
+			'videoUrl': videoUrl,
+			'poster': poster
+		}
 		
-		common.log(poster)
+	def AddMovie(self):
+		dialog = xbmcgui.Dialog()
+		id = dialog.numeric(0, 'Enter movie ID')
 		
-		common.log(name)
+		if len(id) == 0:
+			return
+		
+		movieInfo = self.GetMovie(id)
 		
 		data = []
 		if os.path.exists(moviesFilePath):
 			jsonData = open(moviesFilePath)
 			data = json.load(jsonData)
 		data.append({
-			"name": name,
-			"url": videoUrl,
-			"poster": poster
+			"name": movieInfo['name'],
+			"url": movieInfo['videoUrl'],
+			"poster": movieInfo['poster']
 		})
 		with open(moviesFilePath, 'w') as outfile:
 			json.dump(data, outfile)
@@ -161,4 +166,36 @@ class Scraper:
 		with open(moviesFilePath, 'w') as outfile:
 			json.dump(data, outfile)		
 		
+	def GetCollections(self, url):
+		content = net.http_GET(url).content
+		content = unicode(content, errors='ignore')
+		items = common.parseDOM(content, 'div', attrs = {'class': "collections-front-item[^\"']*"})
 		
+		for item in items:
+			titleDiv = common.parseDOM(item, 'div', attrs = {'class': "collections-title"})
+			title = common.parseDOM(titleDiv, 'h2')[0].encode('utf8')
+			thumbDiv = common.parseDOM(item, 'div', attrs = {'class': "collections-thumb"})
+			thumbnail = common.parseDOM(thumbDiv, 'img', ret='src')[0]
+			href = common.parseDOM(item, 'a', ret='href')[0]
+			
+			nav.addDir(title, href, 'GetMovies', thumbnail)
+			
+	def GetMovies(self, url):
+		content = net.http_GET(url).content
+		items = common.parseDOM(content, 'div', attrs = {'class': "movie-element"})
+		
+		for item in items:
+			title = common.parseDOM(item, 'em', attrs = {'class': "title-en"})[0]
+			thumbnail = common.parseDOM(item, 'img', ret='src')[0]
+			href = common.parseDOM(item, 'a', ret='href')[0]
+			common.log(title)
+			nav.addDir(title.encode('utf8'), href, 'PlayMovie', thumbnail, isFolder=False)
+			
+
+	def PlayMovie(self, url):
+		urlMatcher = re.compile('http://adjaranet.com/Movie/main\?id=([0-9]+)', re.DOTALL).findall(url)
+		common.log(urlMatcher)
+		movieInfo = self.GetMovie(urlMatcher[0])
+		
+		listitem = xbmcgui.ListItem(movieInfo['name'], '', '', movieInfo['poster'])		
+		xbmc.Player().play(movieInfo['videoUrl'], listitem)
