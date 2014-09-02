@@ -1,4 +1,5 @@
-﻿import urllib,urllib2,re,datetime,locale,time,Navigation,Scraper
+﻿import urllib,urllib2,re,datetime,locale,time
+import Navigation, Scraper, Dialogs
 from datetime import datetime, date, timedelta
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 import os
@@ -116,4 +117,7 @@ elif action=='GetMovies':
 elif action=='PlayMovie':
 	Scraper.Scraper().PlayMovie(url)
 	
+elif action=='PlayMovieAs':
+	Scraper.Scraper().PlayMovieAs(url)
+
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

@@ -119,7 +119,11 @@ class Scraper:
 		return {
 			'name': name,
 			'videoUrl': videoUrl,
-			'poster': poster
+			'poster': poster,
+			'languages': languages,
+			'maxres': maxres,
+			'moviepath': moviepath,
+			'url': url
 		}
 		
 	def AddMovie(self):
@@ -137,8 +141,9 @@ class Scraper:
 			data = json.load(jsonData)
 		data.append({
 			"name": movieInfo['name'],
-			"url": movieInfo['videoUrl'],
-			"poster": movieInfo['poster']
+			"videoUrl": movieInfo['videoUrl'],
+			"poster": movieInfo['poster'],
+			"url": movieInfo['url']
 		})
 		with open(moviesFilePath, 'w') as outfile:
 			json.dump(data, outfile)
@@ -151,14 +156,17 @@ class Scraper:
 		jsonData = open(moviesFilePath)
 		data = json.load(jsonData)
 		for item in data:
-			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveMovie&url=%s)' % (sys.argv[0], urllib.quote_plus(item["url"])))]
-			nav.addLink(item["name"].encode('utf8'), item["url"], item["poster"], item["poster"], contextMenuItems = contextMenuItems)
+			contextMenuItems = [
+				('Play As ...', 'XBMC.RunPlugin(%s?action=PlayMovieAs&url=%s)' % (sys.argv[0], urllib.quote_plus(item["url"]))),
+				('Remove', 'XBMC.RunPlugin(%s?action=RemoveMovie&url=%s)' % (sys.argv[0], urllib.quote_plus(item["videoUrl"])))
+			]
+			nav.addLink(item["name"].encode('utf8'), item["videoUrl"], item["poster"], item["poster"], contextMenuItems = contextMenuItems)
 				
 	
 	def RemoveMovie(self, url):
 		jsonData = open(moviesFilePath)
 		data = json.load(jsonData)
-		item = filter(lambda item: item['url'] == url, data)[0]
+		item = filter(lambda item: item['videoUrl'] == url, data)[0]
 		dialog = xbmcgui.Dialog()
 		if not dialog.yesno('Confirm Remove', 'Are you sure you want to remove \'' + item['name'] + '\'?'):
 			return
@@ -183,19 +191,45 @@ class Scraper:
 	def GetMovies(self, url):
 		content = net.http_GET(url).content
 		items = common.parseDOM(content, 'div', attrs = {'class': "movie-element"})
-		
+				
 		for item in items:
 			title = common.parseDOM(item, 'em', attrs = {'class': "title-en"})[0]
 			thumbnail = common.parseDOM(item, 'img', ret='src')[0]
 			href = common.parseDOM(item, 'a', ret='href')[0]
-			common.log(title)
-			nav.addDir(title.encode('utf8'), href, 'PlayMovie', thumbnail, isFolder=False)
+
+			contextMenuItems = [
+				('Play As ...', 'XBMC.RunPlugin(%s?action=PlayMovieAs&url=%s)' % (sys.argv[0], urllib.quote_plus(href)))
+			]
+			nav.addDir(title.encode('utf8'), href, 'PlayMovie', thumbnail, isFolder=False, contextMenuItems = contextMenuItems)
 			
 
 	def PlayMovie(self, url):
+		progress = xbmcgui.DialogProgress()
+		progress.create('Adjaranet', 'Opening data...')
 		urlMatcher = re.compile('http://adjaranet.com/Movie/main\?id=([0-9]+)', re.DOTALL).findall(url)
 		common.log(urlMatcher)
 		movieInfo = self.GetMovie(urlMatcher[0])
+		progress.close()
 		
 		listitem = xbmcgui.ListItem(movieInfo['name'], '', '', movieInfo['poster'])		
 		xbmc.Player().play(movieInfo['videoUrl'], listitem)
+		
+	def PlayMovieAs(self, url):
+		progress = xbmcgui.DialogProgress()
+		progress.create('Adjaranet', 'Opening data...')
+		urlMatcher = re.compile('http://adjaranet.com/Movie/main\?id=([0-9]+)', re.DOTALL).findall(url)
+		movieInfo = self.GetMovie(urlMatcher[0])
+
+		progress.close()
+		dialog = xbmcgui.Dialog()
+		#dialog.select('Select Quality', ['Playlist #1', 'Playlist #2', 'Playlist #3'])
+		lang = dialog.select('Choose Language', movieInfo['languages'])
+		if lang < 0: lang = 0
+		videoUrl = movieInfo['moviepath'] + movieInfo['languages'][lang] + '_' + movieInfo['maxres'] + '.mp4'
+		
+		common.log(lang)
+		
+		listitem = xbmcgui.ListItem(movieInfo['name'], '', '', movieInfo['poster'])		
+		xbmc.Player().play(videoUrl, listitem)
+		
+		
