@@ -1,5 +1,5 @@
 ﻿import urllib,urllib2,re,datetime,locale,time
-import Navigation, Scraper, Dialogs
+import Navigation, Scraper
 from datetime import datetime, date, timedelta
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 import os
