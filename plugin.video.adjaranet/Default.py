@@ -12,7 +12,7 @@ while (not os.path.exists(xbmc.translatePath("special://profile/addon_data/"+add
 	addon.openSettings()						
 						
 def CATEGORIES():
-	nav.addDir('TV Shows', 'http://adjaranet.com/Search/SearchResults?ajax=1&display=120&offset=0&orderBy=date&order%5Border%5D=desc&order%5Bdata%5D=published&country=false&episode=1', 'TVShows', '')
+	nav.addDir('TV Shows', '1', 'TVShows', '')
 	nav.addDir('Movies', '1', 'MoviesRoot', '')
 
         
@@ -72,13 +72,33 @@ if action==None or url==None or len(url)<1:
         CATEGORIES()
        
 elif action=='TVShows':
-	Scraper.Scraper().AddTvShows(url)
-	xbmc.executebuiltin("Container.SetViewMode(500)")
-
-elif action=='TVShow':
-	Scraper.Scraper().AddTvSeasons(url, itemparams)
+	nav.addDir('Recent', 'http://adjaranet.com/Search/SearchResults?ajax=1&display=120&offset=0&orderBy=date&order%5Border%5D=desc&order%5Bdata%5D=published&country=false&episode=1', 'TVShowLastAdded', '')
+	Scraper.Scraper().LoadTvShows()
+	nav.addDir('Add TV Show', '1', 'AddTvShow', 'http://icons.iconarchive.com/icons/dryicons/aesthetica-2/128/movie-track-add-icon.png', isFolder=False)
 	xbmc.executebuiltin("Container.SetViewMode(51)")
 
+elif action=='TVShowLastAdded':
+	Scraper.Scraper().GetTvShows(url)
+	xbmc.executebuiltin("Container.SetViewMode(500)")
+
+elif action=='AddTvShow':
+	Scraper.Scraper().AddTvShow()
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='RemoveTvShow':
+	Scraper.Scraper().RemoveTvShow(url)
+	xbmc.executebuiltin("Container.Refresh")
+	
+elif action=='TVShow':
+	Scraper.Scraper().GetSeasons(url, itemparams)
+	xbmc.executebuiltin("Container.SetViewMode(51)")
+
+elif action=='PlayTVShow':
+	Scraper.Scraper().PlayTvShow(url, itemparams)
+	
+elif action=='PlayTVShowAs':
+	Scraper.Scraper().PlayTvShowAs(url, itemparams)
+	
 elif action=='GetEpisodes':
         Scraper.Scraper().GetEpisodes(url, get_params(url), itemparams)
         xbmc.executebuiltin("Container.SetViewMode(51)")
