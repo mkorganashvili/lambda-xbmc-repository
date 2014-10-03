@@ -14,6 +14,7 @@ while (not os.path.exists(xbmc.translatePath("special://profile/addon_data/"+add
 def CATEGORIES():
 	nav.addDir('TV Shows', '1', 'TVShows', '')
 	nav.addDir('Movies', '1', 'MoviesRoot', '')
+	nav.addDir('raindrop.io', '1', 'raindrop.io', '')
 
         
 def get_params(paramstring = sys.argv[2]):
@@ -139,5 +140,13 @@ elif action=='PlayMovie':
 	
 elif action=='PlayMovieAs':
 	Scraper.Scraper().PlayMovieAs(url)
+	
+elif action=='raindrop.io':
+	nav.addDir('mishiko', 'http://raindrop.io/api/raindrops/219339', 'raindrop.io_get', '')
+	
+elif action=='raindrop.io_get':
+	Scraper.Scraper().RaindropIO(url)
+	
+
 
 xbmcplugin.endOfDirectory(int(sys.argv[1]))

@@ -349,5 +349,14 @@ class Scraper:
 		
 		listitem = xbmcgui.ListItem(movieInfo['name'], '', '', movieInfo['poster'])		
 		xbmc.Player().play(videoUrl, listitem)
+	
+	def RaindropIO(self, url):
+		content = net.http_GET(url).content
+		data = json.loads(content)
+
+		for item in data['items']:
+			common.log(item["title"])
+			nav.addDir(item["title"].encode('utf8'), item["link"], 'PlayMovie', item['cover'], isFolder=False)
+			
 		
 		
