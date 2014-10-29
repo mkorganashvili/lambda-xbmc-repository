@@ -81,6 +81,37 @@ class Scraper:
 			'name': name
 		}
  
+	def GetVideoChannels(self, params):
+		self.GetVideos('http://www.myvideo.ge/TV11&latest=true', params)
+ 
+	def GetVideos(self, url,  params):
+		urlWithParams = url
+		if params:
+			urlWithParams = url + '&per_page=' + params['skip']
+		else:
+			params = { 'skip': 0 }
+	
+		content = net.http_GET(urlWithParams, { "Cookie": "lang_id=eng"}).content
+		items = common.parseDOM(content, "div", attrs = { "class": "mv_video_item medium[^\"']*" })
+		for item in items:
+			thumbnail = common.parseDOM(item, "a", attrs = { "class": "vd_go_to_video[^\"']*" }, ret='style')[0]
+			thumbnail = re.compile("background-image:url\((.*?)\)").findall(thumbnail)[0]
+			href = common.parseDOM(item, "a", ret='href')[0]
+			name = common.parseDOM(item, "a", attrs = { "class": "mv_video_title[^\"']*" })[0]
+			name = common.stripTags(name).encode('utf-8')
+			
+			nav.addDir(name, BASE_URL + href, 'PlayVideo', thumbnail, thumbnail = thumbnail, isFolder = False)
+			
+		nav.addDir("Next", url, 'VideoChannels', 'http://icons.iconarchive.com/icons/rafiqul-hassan/blogger/96/Arrow-Next-icon.png', {'skip':int(params['skip']) + 20})
+ 
+	def PlayVideo(self, url):
+		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
+		common.log(content)
+		urlMatch = re.compile('"link":\[(.*?)\]').findall(content)[0]
+		urls = urlMatch.replace('"', '').split(',')
+		
+		xbmc.Player().play(urls[1])
+ 
 	class TVPlayer(xbmc.Player):
 		def onPlayBackStopped(self):
 			print 'opaaa finish'
