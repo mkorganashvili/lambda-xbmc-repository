@@ -107,10 +107,10 @@ class Scraper:
 	def PlayVideo(self, url):
 		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
 		common.log(content)
-		urlMatch = re.compile('"link":\[(.*?)\]').findall(content)[0]
-		urls = urlMatch.replace('"', '').split(',')
+		url = re.compile("'file': '(.*?)'").findall(content)[0]
+		#url = urlMatch.replace('"', '') #.split(',')
 		
-		xbmc.Player().play(urls[0])
+		xbmc.Player().play(url)
  
 	class TVPlayer(xbmc.Player):
 		def onPlayBackStopped(self):
