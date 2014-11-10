@@ -110,7 +110,7 @@ class Scraper:
 		urlMatch = re.compile('"link":\[(.*?)\]').findall(content)[0]
 		urls = urlMatch.replace('"', '').split(',')
 		
-		xbmc.Player().play(urls[1])
+		xbmc.Player().play(urls[0])
  
 	class TVPlayer(xbmc.Player):
 		def onPlayBackStopped(self):
