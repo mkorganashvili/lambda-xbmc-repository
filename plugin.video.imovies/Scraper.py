@@ -338,17 +338,44 @@ class Scraper:
 		
 		for item in items:
 			filmTitle = common.parseDOM(item, "div", attrs = { "class": "film_title" })
-			title = common.stripTags(filmTitle[0])
+			title = common.stripTags(filmTitle[0]).encode('utf8')
 			movieUrl = common.parseDOM(item, "a", ret="href")[0]
 			thumbnail = common.parseDOM(item, "img", ret="src")[0]
 			
-			movieId = common.parseDOM(item, "a", ret="href")[0]
-			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
+			movieId = common.parseDOM(item, "a", ret="href")[0].replace('/movies/', '')
+			#movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_temp.php?activeseria=0&group=&language=ENG&movie_id=' + movieId).content
+			movieInfo = net.http_GET('http://www.imovies.ge/get_playlist_jwQ.php?movie_id=' + movieId).content
 			movieItems = common.parseDOM(movieInfo, "item")
 			if movieItems:
-				fileUrl = common.parseDOM(movieInfo, "implayer:hd.file")[0]
-				nav.addLink(title.encode('utf8'), fileUrl, 'movie', thumbnail)
-			else:
-				nav.addDir(title.encode('utf8'), 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
-
+				videoUrl = common.parseDOM(movieItems, "jwplayer:source", attrs = {"label": _preferredVideoQuality}, ret="file")
+				if len(videoUrl):
+					videoUrl = videoUrl[0]
+				else:
+					videoUrl = common.parseDOM(movieItems, "jwplayer:source", ret="file")
+					if len(videoUrl):
+						videoUrl = videoUrl[0]
+					else:
+						nav.addDir(title, 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
+						continue
     
+				path = urlparse(videoUrl).path
+				langData = sorted(common.parseDOM(movieItems, "jwplayer:source", ret="lang")[0].split(','))
+
+				li = xbmcgui.ListItem(title, iconImage = thumbnail, thumbnailImage = thumbnail)
+				li.setInfo( type= "Video", 
+                                infoLabels =
+                                        {
+                                             "title": title
+                                        } )
+
+				langIndex = 0
+				contextMenuItems = []
+				for lang in langData:
+					urlData = self.GetEpisodeUrl(lang, path)
+					if urlData['lang'] == _preferredLanguage:
+						langIndex = langData.index(lang)
+					contextMenuItems.append((urlData['lang'], 'PlayMedia("' + urlData['url'] + '")'))
+				
+				contextMenuItems.pop(langIndex)
+				li.addContextMenuItems(contextMenuItems)			
+				xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[langIndex], path)['url'], listitem = li)
