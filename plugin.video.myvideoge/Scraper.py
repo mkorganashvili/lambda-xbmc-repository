@@ -133,13 +133,15 @@ class Scraper:
 			
 		nav.addDir("Next", url, 'GetVideos', 'http://icons.iconarchive.com/icons/rafiqul-hassan/blogger/96/Arrow-Next-icon.png', {'skip':int(params['skip']) + 40})
  
-	def PlayVideo(self, url):
+	def PlayVideo(self, url, name):
 		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
 		common.log(content)
 		url = re.compile("'file': '(.*?)'").findall(content)[0]
 		#url = urlMatch.replace('"', '') #.split(',')
-		
-		xbmc.Player().play(url)
+
+		listitem = xbmcgui.ListItem(name)
+		listitem.setInfo('video', {'Title': name})
+		xbmc.Player().play(url, listitem)
  
  
 	#Video Channels

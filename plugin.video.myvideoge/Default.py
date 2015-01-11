@@ -109,6 +109,6 @@ elif action=='RemoveVideoChannels':
 	xbmc.executebuiltin("Container.Refresh")	
 
 elif action=='PlayVideo':
-	Scraper.Scraper().PlayVideo(url)
+	Scraper.Scraper().PlayVideo(url, name)
 		
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
