@@ -75,15 +75,20 @@ class Scraper:
 		file = common.parseDOM(content, 'file')[0]
 		seek = common.parseDOM(content, 'seek')[0]
 		
-		nextEndTime = datetime(*(time.strptime(common.parseDOM(content, 'dvr_end')[0], '%Y-%m-%d %H:%M:%S')[0:7]))
-		nextUrl = BASE_URL + '/dvr_getfile.php?mode=file&chan={0}&date={1}'.format(params['chan'], urllib.quote_plus('{0:%Y/%m/%d %H:%M:%S}'.format(nextEndTime)))
-		common.log('nextUrl')
-		common.log(nextUrl)
+		nextUrl = ''
+		endTimeString = common.parseDOM(content, 'dvr_end')[0]
+		if endTimeString != 'live':
+			endTime = datetime(*(time.strptime(common.parseDOM(content, 'dvr_end')[0], '%Y-%m-%d %H:%M:%S')[0:7]))
+			nextUrl = BASE_URL + '/dvr_getfile.php?mode=file&chan={0}&date={1}'.format(params['chan'], urllib.quote_plus('{0:%Y/%m/%d %H:%M:%S}'.format(endTime)))
+			common.log('nextUrl')
+			common.log(nextUrl)
 	
 		listitem = xbmcgui.ListItem(params['name'])
 		listitem.setInfo('video', {'Title': params['name']})
-		player = self.TVPlayer()
-		player.playByTime(params['dvrServer'] + RTMP_URL.format(params['chan'], file), listitem, int(seek), nextUrl, params)
+		if endTimeString != 'live':
+			self.TVPlayer().playByTime(params['dvrServer'] + RTMP_URL.format(params['chan'], file), listitem, int(seek), nextUrl, params)
+		else:
+			xbmc.Player().play(params['dvrServer'] + RTMP_URL.format(params['chan'], file), listitem)
 		
 	def PlayTV(self, url, params):
 		listitem = xbmcgui.ListItem(params['name'])
