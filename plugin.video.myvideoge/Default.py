@@ -1,8 +1,16 @@
-﻿import urllib,urllib2,re,xbmcplugin,xbmcgui,xbmc,datetime,locale,time,Scraper
+﻿import urllib,urllib2,re,datetime,locale,time,Scraper, os
+import xbmcplugin, xbmcgui, xbmc, xbmcaddon
 from datetime import datetime, date, timedelta
 from Lib.Navigation import Navigation
 
+addon = xbmcaddon.Addon()
+addonID = addon.getAddonInfo('id')
 nav = Navigation()
+
+usersFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/users.json")
+
+while (not os.path.exists(xbmc.translatePath("special://profile/addon_data/"+addonID+"/settings.xml"))):
+	addon.openSettings()
 
 def get_params(paramstring = sys.argv[2]):
         param = []
@@ -57,7 +65,7 @@ print "Name: " + str(name)
 
 
 if action==None or url==None or len(url)<1:
-	nav.addDir('Channels', 'http://www.myvideo.ge/c/livetv', 'Channels', '')
+	nav.addDir('TV', 'http://www.myvideo.ge/c/livetv', 'Channels', '')
 	nav.addDir('Video Channels', '#', 'VideoChannels', '')
 	xbmc.executebuiltin("Container.SetViewMode(50)")
        
@@ -65,8 +73,8 @@ elif action=='Channels':
 	Scraper.Scraper().GetChannels(url)
 	xbmc.executebuiltin("Container.SetViewMode(500)")
 
-elif action=='Channel':
-	Scraper.Scraper().GetTvSchedule(url)
+elif action=='GetTvSchedule':
+	Scraper.Scraper().GetTvSchedule(url, itemparams)
 	xbmc.executebuiltin("Container.SetViewMode(50)")
 	
 elif action=='PlayByTime':
@@ -75,10 +83,31 @@ elif action=='PlayByTime':
 elif action=='PlayTV':
 	Scraper.Scraper().PlayTV(url, itemparams)
 		
-elif action=='VideoChannels':
-	Scraper.Scraper().GetVideoChannels(itemparams)
+elif action=='PlayLiveTV':
+	Scraper.Scraper().PlayLiveTV(url)
+
+elif action=='GetVideos':
+	Scraper.Scraper().GetVideos(url, itemparams)
 	xbmc.executebuiltin("Container.SetViewMode(500)")
 	
+elif action=='VideoChannels':
+	Scraper.Scraper().LoadVideoChannels()
+	nav.addDir('Add Channel', '#', 'AddVideoChannel', 'http://icons.iconarchive.com/icons/fatcow/farm-fresh/32/television-add-icon.png', isFolder=False)
+	nav.addDir('Add User', '#', 'AddUser', 'http://icons.iconarchive.com/icons/fasticon/fast-icon-users/48/add-user-icon.png', isFolder=False)
+	xbmc.executebuiltin("Container.SetViewMode(500)")
+	
+elif action=='AddVideoChannel':
+	Scraper.Scraper().AddVideoChannel()
+	xbmc.executebuiltin("Container.Refresh")
+	
+elif action=='AddUser':
+	Scraper.Scraper().AddUser()
+	xbmc.executebuiltin("Container.Refresh")	
+
+elif action=='RemoveVideoChannels':
+	Scraper.Scraper().RemoveVideoChannels(url)
+	xbmc.executebuiltin("Container.Refresh")	
+
 elif action=='PlayVideo':
 	Scraper.Scraper().PlayVideo(url)
 		
