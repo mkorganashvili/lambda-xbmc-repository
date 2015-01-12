@@ -37,7 +37,10 @@ class Scraper:
 			icon = BASE_URL + re.compile("background-image:url\('(.*?)'\)").findall(icon)[0]
 			name = common.stripTags(name).encode('utf-8')
 			
-			contextMenuItems = [('Schedule', 'Container.Update(%s?action=GetTvSchedule&url=%s&params=%s)' % (sys.argv[0], urllib.quote_plus(BASE_URL + '/' + href), urllib.quote_plus(nav.paramsToUrl({'timestamp':datetime.now().strftime('%Y-%m-%d')}))))]
+			contextMenuItems = [
+				('Jump on time', 'XBMC.RunPlugin(%s?action=JumpOnTime&url=%s&params=%s)' % (sys.argv[0], urllib.quote_plus(BASE_URL + '/' + href), urllib.quote_plus(nav.paramsToUrl({'timestamp':datetime.now().strftime('%Y-%m-%d')})))),
+				('Schedule', 'Container.Update(%s?action=GetTvSchedule&url=%s&params=%s)' % (sys.argv[0], urllib.quote_plus(BASE_URL + '/' + href), urllib.quote_plus(nav.paramsToUrl({'timestamp':datetime.now().strftime('%Y-%m-%d')}))))
+			]
 			nav.addDir(name, BASE_URL + '/' + href, 'PlayLiveTV', icon, thumbnail = icon, isFolder = False, contextMenuItems = contextMenuItems)
 	
 	def GetTvSchedule(self, url, params):
@@ -65,6 +68,18 @@ class Scraper:
 			timeUrl = BASE_URL + '/dvr_getfile.php?mode=file&chan={0}&date={1}'.format(params['chan'], urllib.quote_plus(tt))
 			common.log(playerParams)
 			nav.addDir(mins.encode('utf-8') + ' - ' + name.encode('utf-8'), timeUrl, 'PlayByTime', '', playerParams, isFolder = False)
+	
+	def JumpOnTime(self, url, params):
+		dialog = xbmcgui.Dialog()
+		d = dialog.numeric(1, 'Enter the date')
+		t = dialog.numeric(2, 'Enter the time')
+		
+		#params = common.getParameters(url)
+		playerParams = self.GetPlayerData(url)
+		jumpTime = datetime(*(time.strptime(d.replace(' ', '') + ' ' + t, '%d/%m/%Y %H:%M')[0:7]))
+		jumpUrl = BASE_URL + '/dvr_getfile.php?mode=file&chan={0}&date={1}'.format(playerParams['chan'], urllib.quote_plus('{0:%Y/%m/%d %H:%M:%S}'.format(jumpTime)))
+		self.PlayByTime(jumpUrl, playerParams)
+		#common.log(jumpTime)
 	
 	def PlayLiveTV(self, url): 
 		playerParams = self.GetPlayerData(url)

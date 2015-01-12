@@ -77,6 +77,9 @@ elif action=='GetTvSchedule':
 	Scraper.Scraper().GetTvSchedule(url, itemparams)
 	xbmc.executebuiltin("Container.SetViewMode(50)")
 	
+elif action=='JumpOnTime':
+	Scraper.Scraper().JumpOnTime(url, itemparams)
+	
 elif action=='PlayByTime':
 	Scraper.Scraper().PlayByTime(url, itemparams)
 	
