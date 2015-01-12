@@ -86,9 +86,18 @@ class Scraper:
 		self.PlayTV(url, playerParams)
 	
 	def PlayByTime(self, url, params):		
+		pDialog = xbmcgui.DialogProgress()
+		ret = pDialog.create('Loading Stream', 'Please wait...')
+		if ret:
+			return
+			
 		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
 		file = common.parseDOM(content, 'file')[0]
 		seek = common.parseDOM(content, 'seek')[0]
+		
+		pDialog.update(50)
+		if pDialog.iscanceled():
+			return
 		
 		nextUrl = ''
 		endTimeString = common.parseDOM(content, 'dvr_end')[0]
@@ -100,6 +109,11 @@ class Scraper:
 	
 		listitem = xbmcgui.ListItem(params['name'])
 		listitem.setInfo('video', {'Title': params['name']})
+		
+		pDialog.update(100)
+		if pDialog.iscanceled():
+			return
+		
 		if endTimeString != 'live':
 			self.TVPlayer().playByTime(params['dvrServer'] + RTMP_URL.format(params['chan'], file), listitem, int(seek), nextUrl, params)
 		else:
