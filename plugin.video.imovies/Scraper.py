@@ -69,7 +69,7 @@ class Scraper:
 				
 			path = urlparse(url).path
 			langData = sorted(common.parseDOM(item, "jwplayer:source", ret="lang")[0].split(','))
-			episode = re.compile('([0-9]+)').findall(common.parseDOM(item, "title")[0])[0]
+			episode = re.compile('\|([0-9]+)').findall(common.parseDOM(item, "title")[0])[0]
 			thumbnail = common.parseDOM(item, "jwplayer:image")[0]
 			
 			if not name:
