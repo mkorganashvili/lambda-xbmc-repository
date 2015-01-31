@@ -20,7 +20,7 @@ _preferredVideoQuality = addon.getSetting('preferredVideoQuality')
 
 common = CommonFunctions
 common.plugin = 'imovies.ge'
-common.dbg = True
+common.dbg = False
 common.dbglevel = 2
 nav = Navigation.Navigation()
 net = Net()
@@ -32,27 +32,27 @@ class Scraper:
 		urlMatcher = re.compile('http://www.imovies.ge/movies/([0-9]+)', re.DOTALL).findall(url)
 		movieId = urlMatcher[0]
 		
-                req = urllib2.Request(url)
-                req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
-                response = urllib2.urlopen(req)
-                content = response.read()
-                response.close()
-                match = re.compile('<li><a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a></li>').findall(content)
-                title = common.parseDOM(content, "h2", attrs = { "class": "[^\"']*film_title_eng[^\"']*" })[0]
-                
-                for name, season in match:
-                        params = {
-                                "title": title,
-                                "season": season
-                        }
-                        nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '', params)
-				
-                if len(match) == 0:
-                        params = {
-                                "title": title,
-                                "season": 1
-                        }
-                        nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
+		content = net.http_GET(url).content
+		try:
+			content = content.encode("string_escape")
+		except:
+			pass
+		match = re.compile('<li><a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a></li>').findall(content)
+		title = common.parseDOM(content, "h2", attrs = { "class": "[^\"']*film_title_eng[^\"']*" })[0]
+		
+		for name, season in match:
+			params = {
+					"title": title,
+					"season": season
+			}
+			nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '', params)
+		
+		if len(match) == 0:
+			params = {
+					"title": title,
+					"season": 1
+			}
+					nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
 	
 	def GetEpisodes(self, url, params):
 		content = net.http_GET(url).content
