@@ -52,7 +52,7 @@ class Scraper:
 					"title": title,
 					"season": 1
 			}
-					nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
+			nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
 	
 	def GetEpisodes(self, url, params):
 		content = net.http_GET(url).content
