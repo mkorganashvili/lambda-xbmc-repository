@@ -1,4 +1,18 @@
 import xbmc
+import json
+from Lib.net import Net
+
+net = Net()
+
+
+#first for php session
+content = net.http_POST('http://filmon.tv/ajax/getChannelInfo', {"channel_id": "95", "quality": "low"}, {"X-Requested-With": "XMLHttpRequest"}).content
+content = net.http_POST('http://filmon.tv/ajax/getChannelInfo', {"channel_id": "95", "quality": "low"}, {"X-Requested-With": "XMLHttpRequest"}).content
+
+data = json.loads(content)
+
+xbmc.Player().play(data["streams"][0]["url"])
+
 
 class LoopPlayer(xbmc.Player):
 	def onPlayBackStopped(self):
@@ -30,4 +44,10 @@ class LoopPlayer(xbmc.Player):
 			#common.log('playLive sleep')
 			
 			
-LoopPlayer().playLoop('http://csm-e.tm.yospace.com/csm/live/78581126.m3u8')
+#LoopPlayer().playLoop('http://csm-e.tm.yospace.com/csm/live/78581126.m3u8')
+#http://www.satandpcguy.com/Site/online_tv_internet_tv_4music.php
+#http://filmon.tv/tv/4-music
+#http://filmon.tv/ajax/getChannelInfo
+
+
+#channel_id=95&quality=low
