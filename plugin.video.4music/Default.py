@@ -11,7 +11,7 @@ content = net.http_POST('http://filmon.tv/ajax/getChannelInfo', {"channel_id": "
 
 data = json.loads(content)
 
-xbmc.Player().play(data["streams"][0]["url"])
+#xbmc.Player().play(data["streams"][0]["url"])
 
 
 class LoopPlayer(xbmc.Player):
@@ -43,6 +43,7 @@ class LoopPlayer(xbmc.Player):
 			xbmc.sleep(1000)
 			#common.log('playLive sleep')
 			
+LoopPlayer().playLoop(data["streams"][0]["url"])
 			
 #LoopPlayer().playLoop('http://csm-e.tm.yospace.com/csm/live/78581126.m3u8')
 #http://www.satandpcguy.com/Site/online_tv_internet_tv_4music.php
