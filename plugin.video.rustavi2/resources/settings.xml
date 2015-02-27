@@ -1,0 +1,3 @@
+<settings>
+   <setting id="preferredLanguage" type="labelenum" label="Preferred Language" values="ENG|RUS|GEO" default="0"/>
+</settings>
