@@ -15,12 +15,13 @@ addonID = addon.getAddonInfo('id')
 usersFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/users.json")
 listsFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/lists.json")
 moviesFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/movies.json")
+channelsFilePath = xbmc.translatePath("special://profile/addon_data/" + addonID + "/channels.json")
 _preferredLanguage = addon.getSetting('preferredLanguage')
 _preferredVideoQuality = addon.getSetting('preferredVideoQuality')
 
 common = CommonFunctions
 common.plugin = 'imovies.ge'
-common.dbg = False
+common.dbg = True
 common.dbglevel = 2
 nav = Navigation.Navigation()
 net = Net()
@@ -37,7 +38,7 @@ class Scraper:
 			content = content.encode("string_escape")
 		except:
 			pass
-		match = re.compile('<li><a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a></li>').findall(content)
+		match = re.compile('<a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a>').findall(content)
 		title = common.parseDOM(content, "h2", attrs = { "class": "[^\"']*film_title_eng[^\"']*" })[0]
 		
 		for name, season in match:
@@ -379,3 +380,101 @@ class Scraper:
 				contextMenuItems.pop(langIndex)
 				li.addContextMenuItems(contextMenuItems)			
 				xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[langIndex], path)['url'], listitem = li)
+
+				
+#Channels
+	def AddChannel(self):
+		dialog = xbmcgui.Dialog()
+		id = dialog.numeric(0, 'Enter Channel ID')
+		
+		if len(id) == 0:
+			return
+		
+		url = 'http://www.imovies.ge/channels/' + id
+		try:
+			content = net.http_GET(url).content
+		except:
+			dialog.ok('Error', 'Cannot find tv show!')
+			return
+		
+		userBoxDiv = common.parseDOM(content, "div", attrs = { "class": "userbox" })
+		if len(userBoxDiv) == 0:
+			return
+			
+		name = common.parseDOM(userBoxDiv, "div", attrs = { "class": "firstname"})[0]
+
+		if not dialog.yesno('Confirm Channel', 'Confirm to add channel: ', name):
+			return
+
+		thumbnailDiv = common.parseDOM(content, "div", attrs = { "class": "avatar" })
+		thumbnail = common.parseDOM(thumbnailDiv, "img", ret="src")[0]
+			
+		data = []
+		if os.path.exists(channelsFilePath):
+			jsonData = open(channelsFilePath)
+			data = json.load(jsonData)
+		data.append({
+			"name": name,
+			"thumbnail": 'http://www.imovies.ge' + thumbnail,
+			"url": url
+		})
+		with open(channelsFilePath, 'w') as outfile:
+			json.dump(data, outfile)
+	
+	def LoadChannels(self):
+		if not os.path.exists(channelsFilePath):
+			return
+		
+		jsonData = open(channelsFilePath)
+		data = json.load(jsonData)
+		for movie in data:
+			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveTvShow&url=%s)' % (sys.argv[0], urllib.quote_plus(movie["url"])))]
+			nav.addDir(movie["name"].encode('utf8'), movie["url"], 'Channel', movie['thumbnail'], contextMenuItems = contextMenuItems)
+	
+	def RemoveChannel(self, url):
+		jsonData = open(channelsFilePath)
+		data = json.load(jsonData)
+		movie = filter(lambda movie: movie['url'] == url, data)[0]
+		dialog = xbmcgui.Dialog()
+		if not dialog.yesno('Confirm Remove', 'Are you sure you want to remove \'' + movie['name'] + '\'?'):
+			return
+		data.remove(movie)
+		with open(channelsFilePath, 'w') as outfile:
+			json.dump(data, outfile)
+	
+	def ScrapChannelPage(self, url):
+		content = net.http_GET(url).content		
+		items = common.parseDOM(content, "div", attrs = { "class": "playlist_row" })
+	
+		for item in items:
+			header = common.parseDOM(item, "h4")
+			title = common.stripTags(header[0]).encode('utf8')
+
+			
+			channelHead = common.parseDOM(item, "div", attrs = { "class": "channel_pl_head_left" })
+			channelUrl = common.parseDOM(channelHead, "a", ret="href")[0]
+			thumbnail = common.parseDOM(channelHead, "img", ret="src")[0]
+
+			nav.addDir(title, channelUrl, 'ScrapVideoPage', thumbnail)
+			
+	def ScrapVideoPage(self, url):
+		content = net.http_GET(url).content		
+		playlist = common.parseDOM(content, "ul", attrs = { "id": "video_playlist" })
+		items = common.parseDOM(playlist, "li")
+		onclicks = common.parseDOM(playlist, "li", ret="onclick")
+		
+		for i, item in enumerate(items):
+			title = common.parseDOM(item, "span", attrs = { "class": "pl_title" })[0].encode('utf8')
+			thumbnail = common.parseDOM(item, "img", ret="src")[0]
+			
+			id = re.search('\/videos\/([0-9]+)', onclicks[i]).group(1)
+			
+			nav.addDir(title, id, 'PlayVideo', thumbnail, thumbnail = thumbnail, isFolder = False)
+			
+	def PlayVideo(self, id):
+		url = "http://www.imovies.ge/get_playlist_video_html5.php?video_id=" + id		
+		content = net.http_GET(url).content
+
+		videoPath = common.parseDOM(content, "jwplayer:source", ret="file")[0]
+		
+		xbmc.Player().play(videoPath)

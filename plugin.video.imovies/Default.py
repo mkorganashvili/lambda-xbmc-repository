@@ -18,6 +18,7 @@ def CATEGORIES():
 	nav.addDir('Users', '1', 'Users', '')
 	nav.addDir('Lists', '1', 'Lists', '')
 	nav.addDir('TV Shows', '1', 'TVShowsRoot', '')
+	nav.addDir('Channels', '1', 'ChannelsRoot', '')
 	nav.addDir('Movies', '1', 'MoviesRoot', '')
 
         
@@ -81,6 +82,10 @@ elif action=='TVShowsRoot':
 	Scraper.Scraper().LoadTvShows()
 	nav.addDir('Add TV Show', 'http://www.imovies.ge/movies/', 'AddTvShow', 'http://icons.iconarchive.com/icons/dryicons/aesthetica-2/128/movie-track-add-icon.png', isFolder=False)
 
+elif action=='ChannelsRoot':
+	Scraper.Scraper().LoadChannels()
+	nav.addDir('Add Channel', '#', 'AddChannel', 'http://icons.iconarchive.com/icons/dryicons/aesthetica-2/128/movie-track-add-icon.png', isFolder=False)
+
 elif action=='MoviesRoot':
 	nav.addDir('Recently Added', 'http://www.imovies.ge/watch', 'ScrapPage', '')
 	nav.addDir('Top of IMDB', 'http://www.imovies.ge/watch.php?sort=rating', 'ScrapPage', '')
@@ -137,4 +142,21 @@ elif action=='RemoveTvShow':
 	Scraper.Scraper().RemoveTvShow(url)
 	xbmc.executebuiltin("Container.Refresh")
 
+elif action=='AddChannel':
+	Scraper.Scraper().AddChannel()
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='RemoveChannel':
+	Scraper.Scraper().RemoveChannel(url)
+	xbmc.executebuiltin("Container.Refresh")
+
+elif action=='Channel':
+	Scraper.Scraper().ScrapChannelPage(url)
+	
+elif action=='ScrapVideoPage':
+	Scraper.Scraper().ScrapVideoPage(url)
+	
+elif action=="PlayVideo":
+	Scraper.Scraper().PlayVideo(url)
+	
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
