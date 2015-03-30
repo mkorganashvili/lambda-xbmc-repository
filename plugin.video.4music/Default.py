@@ -10,9 +10,9 @@ def run():
 	content = net.http_POST('http://filmon.tv/ajax/getChannelInfo', {"channel_id": "95", "quality": "low"}, {"X-Requested-With": "XMLHttpRequest"}).content
 
 	data = json.loads(content)
-	LoopPlayer().playLoop(data["streams"][0]["url"])
+	#LoopPlayer().playLoop(data["streams"][0]["url"])
 
-#xbmc.Player().play(data["streams"][0]["url"])
+	xbmc.Player().play(data["streams"][1]["url"])
 
 
 class LoopPlayer(xbmc.Player):
