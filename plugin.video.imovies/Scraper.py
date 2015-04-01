@@ -41,17 +41,23 @@ class Scraper:
 		match = re.compile('<a data-group="(.+?)" href="#episodes-list-season-[0-9]+" class=".+?">([0-9]+)</a>').findall(content)
 		title = common.parseDOM(content, "h2", attrs = { "class": "[^\"']*film_title_eng[^\"']*" })[0]
 		
+		imdbContainer = common.parseDOM(content, "div", attrs = { "class": "imdbtop"})
+		imdbUrl = common.parseDOM(imdbContainer, "a", ret="href")[0]
+		code = re.findall("/tt\\d{7}", imdbUrl)[0]
+
 		for name, season in match:
 			params = {
 					"title": title,
-					"season": season
+					"season": season,
+					"code": code
 			}
 			nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '', params)
 		
 		if len(match) == 0:
 			params = {
 					"title": title,
-					"season": 1
+					"season": 1,
+					"code": code
 			}
 			nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
 	
@@ -83,7 +89,8 @@ class Scraper:
                                              "title": name,
                                              "episode": episode,
                                              "season": params["season"],
-                                             "tvshowtitle": params["title"]
+                                             "tvshowtitle": params["title"],
+											 "code": params["code"]
                                         } )
 			
 			langIndex = 0
