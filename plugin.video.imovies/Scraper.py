@@ -451,7 +451,7 @@ class Scraper:
 	
 	def ScrapChannelPage(self, url):
 		content = net.http_GET(url).content		
-		items = common.parseDOM(content, "div", attrs = { "class": "playlist_row" })
+		items = common.parseDOM(content, "div", attrs = { "id": "favoritefilms" })
 	
 		for item in items:
 			header = common.parseDOM(item, "h4")
