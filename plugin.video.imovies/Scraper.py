@@ -313,6 +313,7 @@ class Scraper:
 						nav.addDir(title_en, 'http://www.imovies.ge' + movieUrl, 'TVShow', '', thumbnail = thumbnail)
 						continue
 						
+				continue
 				path = urlparse(videoUrl).path
 				langData = sorted(common.parseDOM(movieItems, "jwplayer:source", ret="lang")[0].split(','))
 
