@@ -51,7 +51,7 @@ class Scraper:
 					"season": season,
 					"code": code
 			}
-			nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '', params)
+			nav.addDir('Season %s' % (season), 'http://www.imovies.ge/get_playlist_jwQ_html5.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, season), 'GetEpisodes', '', params)
 		
 		if len(match) == 0:
 			params = {
@@ -59,7 +59,7 @@ class Scraper:
 					"season": 1,
 					"code": code
 			}
-			nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
+			nav.addDir('Season %s' % (1), 'http://www.imovies.ge/get_playlist_jwQ_html5.php?movie_id=%s&activeseria=0&group=sezoni %s' % (movieId, 1), 'GetEpisodes', '', params)
 	
 	def GetEpisodes(self, url, params):
 		content = net.http_GET(url).content
@@ -68,14 +68,14 @@ class Scraper:
 		for item in itemList:
 			name = common.stripTags(common.replaceHTMLCodes(common.parseDOM(item, "description")[0]))
 			
-			url = common.parseDOM(item, "jwplayer:source", attrs = {"label": _preferredVideoQuality}, ret="file")
-			if len(url):
-				url = url[0]
+			videoItem = common.parseDOM(item, "jwplayer:source", attrs = {"label": _preferredVideoQuality})
+			if len(videoItem):
+				videoItem = videoItem[0]
 			else:
-				url = common.parseDOM(item, "jwplayer:source", ret="file")[0]
+				videoItem = common.parseDOM(item, "jwplayer:source")[0]
 				
-			path = urlparse(url).path
-			langData = sorted(common.parseDOM(item, "jwplayer:source", ret="lang")[0].split(','))
+			#path = urlparse(url).path
+			langData = sorted(common.parseDOM(videoItem, "jwplayer:source", ret="lang")[0].split(','))
 			episode = re.compile('\|([0-9]+)').findall(common.parseDOM(item, "title")[0])[0]
 			thumbnail = common.parseDOM(item, "jwplayer:image")[0]
 			
@@ -96,22 +96,22 @@ class Scraper:
 			langIndex = 0
 			contextMenuItems = []
 			for lang in langData:
-				urlData = self.GetEpisodeUrl(lang, path)
+				urlData = self.GetEpisodeUrl(lang)
 				if urlData['lang'] == _preferredLanguage:
 					langIndex = langData.index(lang)
 				contextMenuItems.append((urlData['lang'], 'PlayMedia("' + urlData['url'] + '")'))
 			
 			contextMenuItems.pop(langIndex)
 			li.addContextMenuItems(contextMenuItems)			
-			xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[langIndex], path)['url'], listitem = li)
+			xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = self.GetEpisodeUrl(langData[langIndex])['url'], listitem = li)
 
-	def GetEpisodeUrl(self, langData, path):
-		reLang = re.compile('(.*?)\:(.*?)\:')
+	def GetEpisodeUrl(self, langData):
+		reLang = re.compile('(.*?)\|(.*?)\|')
                 langMatcher = reLang.findall(langData)[0]
                 lang = langMatcher[0]
-                ip = langMatcher[1]
+                url = langMatcher[1]
                 
-                return { 'url': 'http://' + ip + path + lang, 'lang': lang}
+                return { 'url': url, 'lang': lang}
                 
 	def AddUser(self):
 		dialog = xbmcgui.Dialog()
