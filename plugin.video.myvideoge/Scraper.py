@@ -237,7 +237,7 @@ class Scraper:
 		data = json.load(jsonData)
 		for user in data:
 			contextMenuItems = [('Remove', 'XBMC.RunPlugin(%s?action=RemoveVideoChannels&url=%s)' % (sys.argv[0], urllib.quote_plus(user["url"])))]
-			nav.addDir(user["name"], user["url"], 'GetVideos', user["thumbnail"], thumbnail = user["thumbnail"], contextMenuItems = contextMenuItems)
+			nav.addDir(user["name"].encode('utf8'), user["url"], 'GetVideos', user["thumbnail"], thumbnail = user["thumbnail"], contextMenuItems = contextMenuItems)
 	
 	def RemoveVideoChannels(self, url):
 		jsonData = open(channelsFilePath)
