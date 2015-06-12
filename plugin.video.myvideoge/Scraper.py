@@ -165,7 +165,7 @@ class Scraper:
 	def PlayVideo(self, url, name):
 		content = net.http_GET(url, { "Cookie": "lang_id=eng"}).content
 		common.log(content)
-		url = re.compile("'file': '(.*?)'").findall(content)[0]
+		url = re.compile("file\s+: \"(.*?)\"").findall(content)[0]
 		#url = urlMatch.replace('"', '') #.split(',')
 
 		listitem = xbmcgui.ListItem(name)
