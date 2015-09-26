@@ -1,4 +1,4 @@
-﻿import urllib,urllib2,re
+﻿import urllib, urllib2, re
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 import sys, os, datetime, locale, time, string, HTMLParser, json
 from datetime import datetime, date, timedelta
@@ -6,6 +6,7 @@ from xml.dom import minidom
 from Lib.net import Net
 import CommonFunctions
 from urlparse import urlparse
+from bs4 import BeautifulSoup as Soup
 
 import Navigation
 
@@ -485,3 +486,33 @@ class Scraper:
 		videoPath = common.parseDOM(content, "jwplayer:source", ret="file")[0]
 		
 		xbmc.Player().play(videoPath)
+		
+#TV
+
+	def GetTvChannels(self):
+		url = "http://www.imovies.ge/livetv/dvr"
+		content = net.http_GET(url).content
+		
+		soup = Soup(content)
+		logos = soup.select('.channellogos .channellogo')
+		for logo in logos:
+			name = logo.get('data-descr').encode('utf8')
+			thumbnail = 'http://imovies.ge' + logo.select('img')[0].get('src')
+			nav.addDir(name, logo.get('data-title'), 'PlayTvChannel', thumbnail, isFolder = False, params = {'name': name})
+
+		
+	def PlayTvChannel(self, data, params):
+		url = 'http://212.72.157.236/streaming/get.m3u8?data='
+		serverTimeString = net.http_GET('http://www.imovies.ge/livetv/ajax/get_server_time.php').content
+		
+		serverTime = datetime.fromtimestamp(int(serverTimeString)-25)
+		streamUrl = url + data + "_{:%d-%m-%Y}%20{:%H:%M:%S}".format(serverTime, serverTime)
+
+		listItem = xbmcgui.ListItem (params['name'])
+		xbmc.Player().play(streamUrl, listItem)
+		
+		
+		
+		
+		
+		

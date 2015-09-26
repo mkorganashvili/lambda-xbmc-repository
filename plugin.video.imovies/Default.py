@@ -20,6 +20,7 @@ def CATEGORIES():
 	nav.addDir('TV Shows', '1', 'TVShowsRoot', '')
 	nav.addDir('Channels', '1', 'ChannelsRoot', '')
 	nav.addDir('Movies', '1', 'MoviesRoot', '')
+	nav.addDir('TV', '1', 'TV', '')
 
         
 def get_params(paramstring = sys.argv[2]):
@@ -158,5 +159,12 @@ elif action=='ScrapVideoPage':
 	
 elif action=="PlayVideo":
 	Scraper.Scraper().PlayVideo(url)
+	
+elif action=="TV":
+	Scraper.Scraper().GetTvChannels()
+	xbmc.executebuiltin("Container.SetViewMode(500)")
+	
+elif action=="PlayTvChannel":
+	Scraper.Scraper().PlayTvChannel(url, itemparams)
 	
 xbmcplugin.endOfDirectory(int(sys.argv[1]))
